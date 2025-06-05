@@ -38,12 +38,13 @@ Implement **full CRUD (Create, Read, Update, Delete)** operations for the follow
 5.  **Member**:
 
     - `id`: string (unique)
-    - `corporateEmail`: string (unique identifier for a Techie)
-    - `fullName`: string
-    - `hireDate`: string (date format)
-    - `currentAssignedClient`: string
-    - `category`: string (e.g., "Starter", "Builder", "Solver", "Wizard")
-    - `location`: string
+    - `corporateEmail`: string (unique identifier for a Techie) [cite: 18]
+    - `fullName`: string [cite: 18]
+    - `hireDate`: string (date format) [cite: 18]
+    - `currentAssignedClient`: string [cite: 18]
+    - `category`: string (e.g., "Starter", "Builder", "Solver", "Wizard") [cite: 18]
+    - `location`: string [cite: 18]
+    - `availabilityStatus`: string (e.g., "Available", "Available Soon", "Assigned")
 
 6.  **Member Profile**: (This will be a detailed view for a Member)
 
@@ -74,8 +75,10 @@ Implement **full CRUD (Create, Read, Update, Delete)** operations for the follow
 - **Homepage/Dashboard**:
   - A visually appealing dashboard that provides an overview.
   - Display a list of `Members`.
-  - Implement **filtering** capabilities on the dashboard list for `Members` by: `Name` (via full text search), `Knowledge Area`, `Skill Category`, `Skill`, and `Current Assigned Client`.
-  - Include a placeholder section for "Import Members (from Excel)" functionality (no actual import logic needed yet).
+  - Implement **filtering** capabilities on the dashboard list for `Members` by: `Name` (via full text search), `Knowledge Area`, `Skill Category`, `Skill`, `Current Assigned Client`, and `availabilityStatus`. [cite: 16]
+  - Implement a feature to list member profiles based on their client history. This should allow users to select or input a client name and view all members who have worked for that client, based on the `assignments` array in their `MemberProfile` (e.g., "all people who had ever worked for Lunavi"). [cite: 16]
+  - Implement a feature to list all unique skills possessed by members belonging to a specific `Techie Category` (e.g., "Starter", "Builder", "Solver", "Wizard"). Users should be able to select a Techie Category and see an aggregated list of skills associated with members of that category. [cite: 16]
+  - Include a placeholder section for "Import Members (from Excel)" functionality (no actual import logic needed yet). [cite: 16]
 - **Navigation**:
   - Implement a clear top navigation bar or sidebar using Shadcn/UI components to navigate between:
     - Dashboard
@@ -87,6 +90,7 @@ Implement **full CRUD (Create, Read, Update, Delete)** operations for the follow
 - **CRUD Forms**:
   - For each entity, create dedicated pages or dialogs for creating, editing, and viewing details.
   - Use Shadcn/UI forms for input fields and validation.
+  - Ensure that the forms for `Member` management also allow for the comprehensive creation and updating of all `Member Profile` attributes by authorized users (e.g., the Techie themselves or an administrator). This includes fields such as `aboutMe`, `bio`, `assignments`, `rolesAndTasks`, `appreciationsFromClients`, `feedbackComments`, `periodsInTalentPool`, `contactInfo`, `socialConnections`, `status`, `badges`, `certifications`, and `assessments` as per GWT Use Cases 23 and 25.
   - For `MemberSkill`, implement an intuitive way to add/edit skills to a `Member`'s profile, allowing selection of `Skill`, `Scale`, and `proficiencyValue`.
 - **Responsive Design**:
   - Ensure all layouts, components, and tables are fully responsive. Use Tailwind's responsive prefixes (`sm:`, `md:`, `lg:`) extensively.
@@ -99,10 +103,10 @@ Implement **full CRUD (Create, Read, Update, Delete)** operations for the follow
 **Suggestions for Future Enhancements (beyond this initial scope):**
 
 - **Backend Integration**: Migrate `localStorage` persistence to a real database (e.g., Firebase Firestore, a custom REST API) for multi-user access and better data management.
-- **User Authentication & Authorization**: Implement user login, roles (Techie, Sales, Solutions, People, Production), and role-based access control.
+- **User Authentication & Authorization**: Implement user login, roles (Techie, Sales, Solutions, People, Production), and role-based access control. [cite: 5, 6, 7, 8, 15]
 - **Advanced Filtering & Search**: Implement more sophisticated search capabilities, including keyword search across multiple fields and complex query building.
 - **Visualizations**: Integrate charting libraries (e.g., Recharts) to visualize skill distribution, proficiency levels, and talent gaps on the dashboard.
-- **Excel Import Functionality**: Implement the actual logic for parsing Excel files and importing member data.
-- **Integration with External APIs**: Connect to "Techie Points" for client appreciations and "Datamaster" for member data, as mentioned in the original document.
+- **Excel Import Functionality**: Implement the actual logic for parsing Excel files and importing member data. [cite: 16]
+- **Integration with External APIs**: Connect to "Techie Points" for client appreciations and "Datamaster" for member data, as mentioned in the original document. [cite: 16]
 - **Profile Images**: Allow Techies to upload and display profile pictures.
 - **Notifications**: Add a system for alerts or notifications (e.g., when a skill is updated)."
