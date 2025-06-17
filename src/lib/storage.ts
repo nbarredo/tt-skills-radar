@@ -7,6 +7,7 @@ import type {
   MemberProfile,
   MemberSkill,
 } from "@/types";
+import type { Client, MemberAssignment } from "@/lib/types";
 
 const STORAGE_KEYS = {
   KNOWLEDGE_AREAS: "knowledgeAreas",
@@ -16,6 +17,8 @@ const STORAGE_KEYS = {
   MEMBERS: "members",
   MEMBER_PROFILES: "memberProfiles",
   MEMBER_SKILLS: "memberSkills",
+  CLIENTS: "clients",
+  MEMBER_ASSIGNMENTS: "memberAssignments",
 };
 
 // Generic CRUD operations
@@ -173,4 +176,36 @@ export const memberSkillStorage = {
     const filtered = items.filter((item) => item.memberId !== memberId);
     setItems(STORAGE_KEYS.MEMBER_SKILLS, filtered);
   },
+};
+
+// Clients
+export const clientStorage = {
+  getAll: () => getItems<Client>(STORAGE_KEYS.CLIENTS),
+  getById: (id: string) =>
+    getItems<Client>(STORAGE_KEYS.CLIENTS).find((item) => item.id === id),
+  add: (item: Client) => addItem(STORAGE_KEYS.CLIENTS, item),
+  update: (id: string, updates: Partial<Client>) =>
+    updateItem(STORAGE_KEYS.CLIENTS, id, updates),
+  delete: (id: string) => deleteItem(STORAGE_KEYS.CLIENTS, id),
+};
+
+// Member Assignments
+export const memberAssignmentStorage = {
+  getAll: () => getItems<MemberAssignment>(STORAGE_KEYS.MEMBER_ASSIGNMENTS),
+  getById: (id: string) =>
+    getItems<MemberAssignment>(STORAGE_KEYS.MEMBER_ASSIGNMENTS).find(
+      (item) => item.id === id
+    ),
+  getByMemberId: (memberId: string) =>
+    getItems<MemberAssignment>(STORAGE_KEYS.MEMBER_ASSIGNMENTS).filter(
+      (item) => item.memberId === memberId
+    ),
+  getByClientId: (clientId: string) =>
+    getItems<MemberAssignment>(STORAGE_KEYS.MEMBER_ASSIGNMENTS).filter(
+      (item) => item.clientId === clientId
+    ),
+  add: (item: MemberAssignment) => addItem(STORAGE_KEYS.MEMBER_ASSIGNMENTS, item),
+  update: (id: string, updates: Partial<MemberAssignment>) =>
+    updateItem(STORAGE_KEYS.MEMBER_ASSIGNMENTS, id, updates),
+  delete: (id: string) => deleteItem(STORAGE_KEYS.MEMBER_ASSIGNMENTS, id),
 };

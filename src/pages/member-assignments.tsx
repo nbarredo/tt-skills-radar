@@ -17,7 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Member, Client, MemberAssignment } from "@/lib/types";
+import type { Member } from "@/types";
+import { Client, MemberAssignment } from "@/lib/types";
+import {
+  memberStorage,
+  clientStorage,
+  memberAssignmentStorage,
+} from "@/lib/storage";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function MemberAssignmentsPage() {
@@ -31,13 +37,21 @@ export default function MemberAssignmentsPage() {
   const { toast } = useToast();
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    memberId: string;
+    clientId: string;
+    startDate: string;
+    endDate: string;
+    role: string;
+    status: "Active" | "Completed" | "Planned";
+    notes: string;
+  }>({
     memberId: "",
     clientId: "",
     startDate: "",
     endDate: "",
     role: "",
-    status: "Active" as const,
+    status: "Active",
     notes: "",
   });
 
@@ -46,21 +60,9 @@ export default function MemberAssignmentsPage() {
   }, []);
 
   const loadData = () => {
-    const storedMembers = localStorage.getItem("members");
-    const storedClients = localStorage.getItem("clients");
-    const storedAssignments = localStorage.getItem("memberAssignments");
-
-    if (storedMembers) setMembers(JSON.parse(storedMembers));
-    if (storedClients) setClients(JSON.parse(storedClients));
-    if (storedAssignments) setAssignments(JSON.parse(storedAssignments));
-  };
-
-  const saveAssignments = (updatedAssignments: MemberAssignment[]) => {
-    localStorage.setItem(
-      "memberAssignments",
-      JSON.stringify(updatedAssignments)
-    );
-    setAssignments(updatedAssignments);
+    setMembers(memberStorage.getAll());
+    setClients(clientStorage.getAll());
+    setAssignments(memberAssignmentStorage.getAll());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -69,12 +71,11 @@ export default function MemberAssignmentsPage() {
 
     if (editingAssignment) {
       // Update existing assignment
-      const updatedAssignments = assignments.map((assignment) =>
-        assignment.id === editingAssignment.id
-          ? { ...assignment, ...formData, updatedAt: now }
-          : assignment
-      );
-      saveAssignments(updatedAssignments);
+      memberAssignmentStorage.update(editingAssignment.id, {
+        ...formData,
+        updatedAt: now,
+      });
+      loadData();
       toast({
         title: "Assignment updated",
         description: "The assignment has been updated successfully.",
@@ -87,7 +88,8 @@ export default function MemberAssignmentsPage() {
         createdAt: now,
         updatedAt: now,
       };
-      saveAssignments([...assignments, newAssignment]);
+      memberAssignmentStorage.add(newAssignment);
+      loadData();
       toast({
         title: "Assignment created",
         description: "The new assignment has been created successfully.",
@@ -114,10 +116,8 @@ export default function MemberAssignmentsPage() {
 
   const handleDelete = (assignmentId: string) => {
     if (window.confirm("Are you sure you want to delete this assignment?")) {
-      const updatedAssignments = assignments.filter(
-        (assignment) => assignment.id !== assignmentId
-      );
-      saveAssignments(updatedAssignments);
+      memberAssignmentStorage.delete(assignmentId);
+      loadData();
       toast({
         title: "Assignment deleted",
         description: "The assignment has been deleted successfully.",

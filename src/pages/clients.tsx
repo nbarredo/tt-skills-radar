@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Client } from "@/lib/types";
+import { clientStorage } from "@/lib/storage";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function ClientsPage() {
@@ -36,12 +37,18 @@ export default function ClientsPage() {
   const { toast } = useToast();
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    industry: string;
+    location: string;
+    status: "Active" | "Inactive";
+  }>({
     name: "",
     description: "",
     industry: "",
     location: "",
-    status: "Active" as const,
+    status: "Active",
   });
 
   useEffect(() => {
@@ -49,15 +56,7 @@ export default function ClientsPage() {
   }, []);
 
   const loadClients = () => {
-    const storedClients = localStorage.getItem("clients");
-    if (storedClients) {
-      setClients(JSON.parse(storedClients));
-    }
-  };
-
-  const saveClients = (updatedClients: Client[]) => {
-    localStorage.setItem("clients", JSON.stringify(updatedClients));
-    setClients(updatedClients);
+    setClients(clientStorage.getAll());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,12 +65,11 @@ export default function ClientsPage() {
 
     if (editingClient) {
       // Update existing client
-      const updatedClients = clients.map((client) =>
-        client.id === editingClient.id
-          ? { ...client, ...formData, updatedAt: now }
-          : client
-      );
-      saveClients(updatedClients);
+      clientStorage.update(editingClient.id, {
+        ...formData,
+        updatedAt: now,
+      });
+      loadClients();
       toast({
         title: "Client updated",
         description: "The client has been updated successfully.",
@@ -84,7 +82,8 @@ export default function ClientsPage() {
         createdAt: now,
         updatedAt: now,
       };
-      saveClients([...clients, newClient]);
+      clientStorage.add(newClient);
+      loadClients();
       toast({
         title: "Client created",
         description: "The new client has been created successfully.",
@@ -109,8 +108,8 @@ export default function ClientsPage() {
 
   const handleDelete = (clientId: string) => {
     if (window.confirm("Are you sure you want to delete this client?")) {
-      const updatedClients = clients.filter((client) => client.id !== clientId);
-      saveClients(updatedClients);
+      clientStorage.delete(clientId);
+      loadClients();
       toast({
         title: "Client deleted",
         description: "The client has been deleted successfully.",
