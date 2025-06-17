@@ -36,12 +36,18 @@ export default function ClientsPage() {
   const { toast } = useToast();
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    industry: string;
+    location: string;
+    status: "Active" | "Inactive";
+  }>({
     name: "",
     description: "",
     industry: "",
     location: "",
-    status: "Active" as const,
+    status: "Active",
   });
 
   useEffect(() => {

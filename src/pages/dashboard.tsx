@@ -34,14 +34,22 @@ import {
   knowledgeAreaStorage,
   skillCategoryStorage,
   memberSkillStorage,
+  memberProfileStorage,
 } from "@/lib/storage";
-import type { Member, Skill, KnowledgeArea, SkillCategory } from "@/types";
+import type {
+  Member,
+  Skill,
+  KnowledgeArea,
+  SkillCategory,
+  MemberProfile,
+} from "@/types";
 
 export function Dashboard() {
   const [members, setMembers] = useState<Member[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [knowledgeAreas, setKnowledgeAreas] = useState<KnowledgeArea[]>([]);
   const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
+  const [memberProfiles, setMemberProfiles] = useState<MemberProfile[]>([]);
 
   // Filters
   const [nameFilter, setNameFilter] = useState("");
@@ -49,6 +57,7 @@ export function Dashboard() {
   const [skillCategoryFilter, setSkillCategoryFilter] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
+  const [pastClientFilter, setPastClientFilter] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
 
@@ -58,6 +67,7 @@ export function Dashboard() {
     setSkills(skillStorage.getAll());
     setKnowledgeAreas(knowledgeAreaStorage.getAll());
     setSkillCategories(skillCategoryStorage.getAll());
+    setMemberProfiles(memberProfileStorage.getAll());
   }, []);
 
   // Get unique clients from members
@@ -67,6 +77,26 @@ export function Dashboard() {
     );
     return Array.from(clients);
   }, [members]);
+
+  const memberProfileMap = useMemo(() => {
+    const map = new Map<string, MemberProfile>();
+    memberProfiles.forEach((profile) => {
+      map.set(profile.memberId, profile);
+    });
+    return map;
+  }, [memberProfiles]);
+
+  const uniquePastClients = useMemo(() => {
+    const clients = new Set<string>();
+    memberProfiles.forEach((profile) => {
+      profile.assignments.forEach((assignment) => {
+        const match = assignment.match(/^([^-(]+)/);
+        const name = match ? match[1].trim() : assignment.trim();
+        if (name) clients.add(name);
+      });
+    });
+    return Array.from(clients);
+  }, [memberProfiles]);
 
   // Filter members based on all criteria
   const filteredMembers = useMemo(() => {
@@ -82,6 +112,16 @@ export function Dashboard() {
       // Client filter
       if (clientFilter && member.currentAssignedClient !== clientFilter) {
         return false;
+      }
+
+      // Past client filter
+      if (pastClientFilter) {
+        const profile = memberProfileMap.get(member.id);
+        if (!profile) return false;
+        const match = profile.assignments.some((assignment) =>
+          assignment.toLowerCase().includes(pastClientFilter.toLowerCase())
+        );
+        if (!match) return false;
       }
 
       // Availability filter
@@ -139,9 +179,11 @@ export function Dashboard() {
     skillCategoryFilter,
     skillFilter,
     clientFilter,
+    pastClientFilter,
     availabilityFilter,
     categoryFilter,
     skills,
+    memberProfileMap,
   ]);
 
   const stats = [
@@ -324,6 +366,38 @@ export function Dashboard() {
             </div>
 
             <div className="space-y-2">
+              <label className="text-sm font-medium">Past Client</label>
+              <div className="relative">
+                <Select
+                  value={pastClientFilter}
+                  onValueChange={setPastClientFilter}
+                >
+                  <SelectTrigger className={pastClientFilter ? "pr-10" : ""}>
+                    <SelectValue placeholder="Any" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {uniquePastClients.map((client) => (
+                      <SelectItem key={client} value={client}>
+                        {client}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {pastClientFilter && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setPastClientFilter("")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <label className="text-sm font-medium">Availability</label>
               <div className="relative">
                 <Select
@@ -396,6 +470,7 @@ export function Dashboard() {
                 setSkillCategoryFilter("");
                 setSkillFilter("");
                 setClientFilter("");
+                setPastClientFilter("");
                 setAvailabilityFilter("");
                 setCategoryFilter("");
               }}
