@@ -1,7 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
-import { Home, Brain, Tags, Lightbulb, Gauge, Users, Menu } from "lucide-react";
+import {
+  Home,
+  Brain,
+  Tags,
+  Lightbulb,
+  Gauge,
+  Users,
+  Menu,
+  Building2,
+  Calendar,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -13,6 +23,8 @@ const navigation = [
   { name: "Skills", href: "/skills", icon: Lightbulb },
   { name: "Scales", href: "/scales", icon: Gauge },
   { name: "Members", href: "/members", icon: Users },
+  { name: "Clients", href: "/clients", icon: Building2 },
+  { name: "Assignments", href: "/member-assignments", icon: Calendar },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

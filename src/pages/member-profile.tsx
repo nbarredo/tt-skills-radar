@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -41,6 +41,7 @@ import {
   Award,
   BookOpen,
   ClipboardCheck,
+  Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -59,6 +60,7 @@ import type {
   Certification,
   Assessment,
 } from "@/types";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export function MemberProfile() {
   const { id } = useParams<{ id: string }>();
@@ -96,6 +98,8 @@ export function MemberProfile() {
     score: "",
     date: "",
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (id) {
@@ -234,6 +238,20 @@ export function MemberProfile() {
     return scale?.name || "Unknown";
   };
 
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !member) return;
+
+    // Convert the image to base64
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      memberStorage.update(member.id, { photoUrl: base64 });
+      setMember({ ...member, photoUrl: base64 });
+    };
+    reader.readAsDataURL(file);
+  };
+
   if (!member || !profile) {
     return <div>Loading...</div>;
   }
@@ -248,11 +266,39 @@ export function MemberProfile() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {member.fullName}
-          </h1>
-          <p className="text-muted-foreground">{member.corporateEmail}</p>
+        <div className="flex items-center gap-4">
+          <div className="relative group">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={member.photoUrl} alt={member.fullName} />
+              <AvatarFallback className="text-lg">
+                {member.fullName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </AvatarFallback>
+            </Avatar>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+            />
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute bottom-0 right-0 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {member.fullName}
+            </h1>
+            <p className="text-muted-foreground">{member.corporateEmail}</p>
+          </div>
         </div>
       </div>
 

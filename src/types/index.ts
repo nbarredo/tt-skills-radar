@@ -34,6 +34,7 @@ export interface Member {
   category: "Starter" | "Builder" | "Solver" | "Wizard";
   location: string;
   availabilityStatus: "Available" | "Available Soon" | "Assigned";
+  photoUrl?: string;
 }
 
 export interface ContactInfo {

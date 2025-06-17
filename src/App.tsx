@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
 import { Layout } from "@/components/layout";
 import { Dashboard } from "@/pages/dashboard";
 import { KnowledgeAreas } from "@/pages/knowledge-areas";
@@ -9,6 +9,8 @@ import { Skills } from "@/pages/skills";
 import { Scales } from "@/pages/scales";
 import { Members } from "@/pages/members";
 import { MemberProfile } from "@/pages/member-profile";
+import ClientsPage from "@/pages/clients";
+import MemberAssignmentsPage from "@/pages/member-assignments";
 
 function App() {
   return (
@@ -23,10 +25,15 @@ function App() {
             <Route path="/scales" element={<Scales />} />
             <Route path="/members" element={<Members />} />
             <Route path="/members/:id" element={<MemberProfile />} />
+            <Route path="/clients" element={<ClientsPage />} />
+            <Route
+              path="/member-assignments"
+              element={<MemberAssignmentsPage />}
+            />
           </Routes>
         </Layout>
+        <Toaster />
       </Router>
-      <Toaster />
     </ThemeProvider>
   );
 }

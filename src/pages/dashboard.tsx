@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ExcelImport } from "@/components/excel-import";
+import { EntityImport } from "@/components/entity-import";
 import {
   Users,
   Brain,
@@ -472,18 +474,18 @@ export function Dashboard() {
       {/* Import Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Import Members</CardTitle>
-          <CardDescription>Import member data from Excel files</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="h-5 w-5" />
+            Import Data
+          </CardTitle>
+          <CardDescription>
+            Import members and entities from Excel files
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <FileSpreadsheet className="h-8 w-8 text-muted-foreground" />
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">
-                Excel import functionality will be available in a future update.
-              </p>
-            </div>
-            <Button disabled>Import from Excel</Button>
+        <CardContent className="space-y-4">
+          <div className="flex gap-4">
+            <ExcelImport />
+            <EntityImport />
           </div>
         </CardContent>
       </Card>
