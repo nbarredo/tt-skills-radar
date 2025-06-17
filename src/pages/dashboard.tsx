@@ -151,6 +151,29 @@ export function Dashboard() {
     { name: "Skill Categories", value: skillCategories.length, icon: Tags },
   ];
 
+  // Aggregate unique skills for the selected techie category
+  const categorySkills = useMemo(() => {
+    if (!categoryFilter) return [] as string[];
+
+    // Find members in the chosen category
+    const membersInCategory = members.filter(
+      (member) => member.category === categoryFilter
+    );
+
+    const skillIds = new Set<string>();
+
+    membersInCategory.forEach((member) => {
+      const mSkills = memberSkillStorage.getByMemberId(member.id);
+      mSkills.forEach((ms) => skillIds.add(ms.skillId));
+    });
+
+    const idToName = new Map(skills.map((s) => [s.id, s.name] as const));
+
+    return Array.from(skillIds)
+      .map((id) => idToName.get(id) || id)
+      .sort();
+  }, [categoryFilter, members, skills]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -405,6 +428,35 @@ export function Dashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Aggregated Skills for Selected Category */}
+      {categoryFilter && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {categoryFilter} Skills ({categorySkills.length})
+            </CardTitle>
+            <CardDescription>
+              Unique skills from members in the selected category
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {categorySkills.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No skills found for this category.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {categorySkills.map((skill) => (
+                  <Badge key={skill} variant="secondary">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Members List */}
       <Card>
