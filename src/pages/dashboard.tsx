@@ -68,6 +68,26 @@ export function Dashboard() {
     return Array.from(clients);
   }, [members]);
 
+  // Aggregate unique skills for members in selected category
+  const categorySkills = useMemo(() => {
+    if (!categoryFilter) return [] as string[];
+
+    // Get members that match the selected category
+    const categoryMembers = members.filter((m) => m.category === categoryFilter);
+
+    const skillIds = new Set<string>();
+    categoryMembers.forEach((member) => {
+      memberSkillStorage
+        .getByMemberId(member.id)
+        .forEach((ms) => skillIds.add(ms.skillId));
+    });
+
+    // Map skill ids to skill names
+    return Array.from(skillIds)
+      .map((id) => skills.find((s) => s.id === id)?.name || "Unknown")
+      .sort();
+  }, [categoryFilter, members, skills]);
+
   // Filter members based on all criteria
   const filteredMembers = useMemo(() => {
     return members.filter((member) => {
@@ -403,6 +423,35 @@ export function Dashboard() {
               Clear Filters
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Aggregated Skills for Selected Category */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Aggregated Skills</CardTitle>
+          <CardDescription>
+            Unique skills of members in the selected category
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {categoryFilter ? (
+            categorySkills.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No skills found for this category.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {categorySkills.map((skill) => (
+                  <Badge key={skill}>{skill}</Badge>
+                ))}
+              </div>
+            )
+          ) : (
+            <p className="text-center text-muted-foreground py-8">
+              Select a category above to view skills.
+            </p>
+          )}
         </CardContent>
       </Card>
 
