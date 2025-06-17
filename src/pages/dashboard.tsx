@@ -68,6 +68,23 @@ export function Dashboard() {
     return Array.from(clients);
   }, [members]);
 
+  // Unique skills for selected techie category
+  const uniqueSkillsForCategory = useMemo(() => {
+    if (!categoryFilter) return [] as Skill[];
+
+    // Find members that belong to the selected category
+    const membersInCategory = members.filter((m) => m.category === categoryFilter);
+
+    // Collect all skill ids for these members
+    const skillIds = new Set<string>();
+    membersInCategory.forEach((member) => {
+      const ms = memberSkillStorage.getByMemberId(member.id);
+      ms.forEach((s) => skillIds.add(s.skillId));
+    });
+
+    return skills.filter((skill) => skillIds.has(skill.id));
+  }, [categoryFilter, members, skills]);
+
   // Filter members based on all criteria
   const filteredMembers = useMemo(() => {
     return members.filter((member) => {
@@ -403,6 +420,39 @@ export function Dashboard() {
               Clear Filters
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Category Skills */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Skills in {categoryFilter || "Selected Category"}</CardTitle>
+          <CardDescription>
+            {categoryFilter
+              ? `${uniqueSkillsForCategory.length} unique skill${
+                  uniqueSkillsForCategory.length !== 1 ? "s" : ""
+                }`
+              : "Select a techie category to view skills"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!categoryFilter ? (
+            <p className="text-center text-muted-foreground py-8">
+              Select a category above to see its skills.
+            </p>
+          ) : uniqueSkillsForCategory.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              No skills found for this category.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {uniqueSkillsForCategory.map((skill) => (
+                <Badge key={skill.id} variant="secondary">
+                  {skill.name}
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
