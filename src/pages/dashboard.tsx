@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExcelImport } from "@/components/excel-import";
 import { EntityImport } from "@/components/entity-import";
+import { DataLoader } from "@/components/data-loader";
 import {
   Users,
   Brain,
@@ -29,12 +30,15 @@ import {
   X,
 } from "lucide-react";
 import {
-  memberStorage,
-  skillStorage,
-  knowledgeAreaStorage,
-  skillCategoryStorage,
-  memberSkillStorage,
-} from "@/lib/storage";
+  memberDb,
+  skillDb,
+  knowledgeAreaDb,
+  skillCategoryDb,
+  memberSkillDb,
+  initDatabase,
+  loadExcelData,
+  dbUtils,
+} from "@/lib/database";
 import type { Member, Skill, KnowledgeArea, SkillCategory } from "@/types";
 
 export function Dashboard() {
@@ -42,6 +46,7 @@ export function Dashboard() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [knowledgeAreas, setKnowledgeAreas] = useState<KnowledgeArea[]>([]);
   const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Filters
   const [nameFilter, setNameFilter] = useState("");
@@ -53,11 +58,29 @@ export function Dashboard() {
   const [categoryFilter, setCategoryFilter] = useState("");
 
   useEffect(() => {
-    // Load data from localStorage
-    setMembers(memberStorage.getAll());
-    setSkills(skillStorage.getAll());
-    setKnowledgeAreas(knowledgeAreaStorage.getAll());
-    setSkillCategories(skillCategoryStorage.getAll());
+    // Initialize database and load data
+    const initializeData = async () => {
+      initDatabase();
+
+      // Load Excel data if not already initialized
+      if (!dbUtils.isInitialized()) {
+        try {
+          await loadExcelData();
+          console.log("Excel data loaded successfully");
+        } catch (error) {
+          console.error("Failed to load Excel data:", error);
+        }
+      }
+
+      // Load data into state
+      setMembers(memberDb.getAll());
+      setSkills(skillDb.getAll());
+      setKnowledgeAreas(knowledgeAreaDb.getAll());
+      setSkillCategories(skillCategoryDb.getAll());
+      setIsDataLoaded(dbUtils.isInitialized());
+    };
+
+    initializeData();
   }, []);
 
   // Get unique clients from members
@@ -99,7 +122,7 @@ export function Dashboard() {
 
       // Skill-based filters
       if (knowledgeAreaFilter || skillCategoryFilter || skillFilter) {
-        const memberSkills = memberSkillStorage.getByMemberId(member.id);
+        const memberSkills = memberSkillDb.getByMemberId(member.id);
         const memberSkillIds = memberSkills.map((ms) => ms.skillId);
 
         if (skillFilter && !memberSkillIds.includes(skillFilter)) {
@@ -151,6 +174,15 @@ export function Dashboard() {
     { name: "Skill Categories", value: skillCategories.length, icon: Tags },
   ];
 
+  const handleDataLoaded = () => {
+    // Refresh data after loading
+    setMembers(memberDb.getAll());
+    setSkills(skillDb.getAll());
+    setKnowledgeAreas(knowledgeAreaDb.getAll());
+    setSkillCategories(skillCategoryDb.getAll());
+    setIsDataLoaded(true);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -160,6 +192,9 @@ export function Dashboard() {
           expertise.
         </p>
       </div>
+
+      {/* Data Loader */}
+      {!isDataLoaded && <DataLoader onDataLoaded={handleDataLoaded} />}
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
