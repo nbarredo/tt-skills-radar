@@ -8,6 +8,7 @@ import type {
   Member,
   MemberProfile,
   MemberSkill,
+  Client,
 } from "@/types";
 
 // Raw Excel data structure
@@ -27,6 +28,7 @@ interface DatabaseSchema {
   members: Member[];
   memberProfiles: MemberProfile[];
   memberSkills: MemberSkill[];
+  clients: Client[];
   rawExcelData: ExcelRow[];
   isInitialized: boolean;
 }
@@ -40,6 +42,7 @@ const defaultData: DatabaseSchema = {
   members: [],
   memberProfiles: [],
   memberSkills: [],
+  clients: [],
   rawExcelData: [],
   isInitialized: false,
 };
@@ -66,248 +69,55 @@ export function getDatabase() {
   return db!;
 }
 
-// Load and process Excel data
+// Load structured JSON data
 export async function loadExcelData() {
   const database = getDatabase();
 
   // Skip if already initialized
   if (database.data.isInitialized) {
-    console.log("Database already initialized with Excel data");
+    console.log("Database already initialized");
     return;
   }
 
   try {
-    console.log("Loading Excel data from bootcamp-skills.json...");
+    console.log("Loading data from db.json...");
 
     // Fetch the JSON data
-    const response = await fetch("/data/bootcamp-skills.json");
+    const response = await fetch("/data/db.json");
     if (!response.ok) {
-      throw new Error(`Failed to fetch Excel data: ${response.statusText}`);
+      throw new Error(`Failed to fetch data: ${response.statusText}`);
     }
 
-    const rawData: ExcelRow[] = await response.json();
-    console.log(`Loaded ${rawData.length} rows from Excel data`);
+    const structuredData: DatabaseSchema = await response.json();
+    console.log("Loaded structured data from db.json");
 
-    // Store raw data
-    database.data.rawExcelData = rawData;
-
-    // Process the data
-    await processExcelData(rawData);
-
-    // Mark as initialized
+    // Load all data directly
+    database.data.knowledgeAreas = structuredData.knowledgeAreas || [];
+    database.data.skillCategories = structuredData.skillCategories || [];
+    database.data.skills = structuredData.skills || [];
+    database.data.scales = structuredData.scales || [];
+    database.data.members = structuredData.members || [];
+    database.data.memberProfiles = structuredData.memberProfiles || [];
+    database.data.memberSkills = structuredData.memberSkills || [];
+    database.data.clients = structuredData.clients || [];
+    database.data.rawExcelData = structuredData.rawExcelData || [];
     database.data.isInitialized = true;
+
     database.write();
 
-    console.log("Excel data processing completed successfully");
+    console.log(`Data loaded successfully:
+    - Knowledge Areas: ${database.data.knowledgeAreas.length}
+    - Skill Categories: ${database.data.skillCategories.length}
+    - Skills: ${database.data.skills.length}
+    - Scales: ${database.data.scales.length}
+    - Members: ${database.data.members.length}
+    - Member Profiles: ${database.data.memberProfiles.length}
+    - Member Skills: ${database.data.memberSkills.length}
+    - Clients: ${database.data.clients.length}`);
   } catch (error) {
-    console.error("Failed to load Excel data:", error);
+    console.error("Failed to load data:", error);
     throw error;
   }
-}
-
-// Process Excel data into structured entities
-async function processExcelData(rawData: ExcelRow[]) {
-  const database = getDatabase();
-
-  // Create default entities
-  const defaultKnowledgeArea: KnowledgeArea = {
-    id: crypto.randomUUID(),
-    name: "Technologies",
-    description: "Technical skills and technologies",
-  };
-
-  const defaultCategory: SkillCategory = {
-    id: crypto.randomUUID(),
-    name: "Technical Skills",
-    criterion: "Technical proficiency and experience",
-  };
-
-  const defaultScale: Scale = {
-    id: crypto.randomUUID(),
-    name: "Proficiency Level",
-    type: "Numeric",
-    values: ["1", "2", "3", "4", "5"],
-  };
-
-  database.data.knowledgeAreas = [defaultKnowledgeArea];
-  database.data.skillCategories = [defaultCategory];
-  database.data.scales = [defaultScale];
-
-  // Process members and skills
-  const memberMap = new Map<string, Member>();
-  const skillMap = new Map<string, Skill>();
-  const memberSkills: MemberSkill[] = [];
-
-  let processedRows = 0;
-
-  for (const row of rawData) {
-    try {
-      // Skip rows with missing essential data
-      if (!row.Email || !row.Skill || row.Skill.trim() === "") {
-        continue;
-      }
-
-      // Skip open-ended questions without expertise levels
-      if (
-        !row["Expertise Full Name"] ||
-        row["Expertise Full Name"] === "undefined" ||
-        row["Expertise Full Name"].trim() === ""
-      ) {
-        // Only skip if it looks like an open-ended question
-        if (
-          row.Skill.toLowerCase().includes("other") ||
-          row.Skill.toLowerCase().includes("share") ||
-          row.Skill.toLowerCase().includes("please") ||
-          row.Skill.toLowerCase().includes("additional")
-        ) {
-          continue;
-        }
-      }
-
-      const email = row.Email.trim();
-      const skillName = row.Skill.trim();
-      const expertiseText = row["Expertise Full Name"] || "";
-
-      // Create member if not exists
-      if (!memberMap.has(email)) {
-        const member = generateMemberFromEmail(email);
-        memberMap.set(email, member);
-      }
-
-      // Create skill if not exists
-      if (!skillMap.has(skillName.toLowerCase())) {
-        const skill: Skill = {
-          id: crypto.randomUUID(),
-          name: skillName,
-          purpose: `Technical skill: ${skillName}`,
-          knowledgeAreaId: defaultKnowledgeArea.id,
-          skillCategoryId: defaultCategory.id,
-        };
-        skillMap.set(skillName.toLowerCase(), skill);
-      }
-
-      // Create member skill assignment
-      const member = memberMap.get(email)!;
-      const skill = skillMap.get(skillName.toLowerCase())!;
-      const proficiencyLevel = mapProficiencyLevel(expertiseText);
-
-      const memberSkill: MemberSkill = {
-        memberId: member.id,
-        skillId: skill.id,
-        scaleId: defaultScale.id,
-        proficiencyValue: proficiencyLevel.toString(),
-      };
-
-      memberSkills.push(memberSkill);
-    } catch (error) {
-      console.warn(`Error processing row ${processedRows + 1}:`, error);
-    }
-
-    processedRows++;
-  }
-
-  // Store processed data
-  database.data.members = Array.from(memberMap.values());
-  database.data.skills = Array.from(skillMap.values());
-  database.data.memberSkills = memberSkills;
-
-  // Create member profiles
-  database.data.memberProfiles = database.data.members.map((member) =>
-    generateMemberProfile(member.id)
-  );
-
-  console.log(`Processed data:
-    - Members: ${database.data.members.length}
-    - Skills: ${database.data.skills.length}
-    - Member Skills: ${database.data.memberSkills.length}`);
-}
-
-// Helper functions
-function mapProficiencyLevel(expertiseText: string): number {
-  if (
-    !expertiseText ||
-    expertiseText === "undefined" ||
-    expertiseText.trim() === ""
-  ) {
-    return 2; // Default level
-  }
-
-  const text = expertiseText.toLowerCase();
-
-  // Standard format mapping
-  if (text.includes("(1)") || text.includes("don't know")) return 1;
-  if (text.includes("(2)") || text.includes("know but didn't use")) return 2;
-  if (
-    text.includes("(3)") ||
-    text.includes("know well") ||
-    text.includes("used it several times")
-  )
-    return 3;
-  if (
-    text.includes("(4)") ||
-    text.includes("wide knowledge") ||
-    text.includes("reference")
-  )
-    return 4;
-  if (text.includes("(5)") || text.includes("expert")) return 5;
-
-  // Custom descriptions mapping
-  if (
-    text.includes("expert") ||
-    text.includes("reference") ||
-    text.includes("senior")
-  )
-    return 4;
-  if (
-    text.includes("know well") ||
-    text.includes("experience") ||
-    text.includes("comfortable")
-  )
-    return 3;
-  if (text.includes("used") || text.includes("tried") || text.includes("basic"))
-    return 2;
-  if (text.includes("heard") || text.includes("aware")) return 1;
-
-  return 2; // Default fallback
-}
-
-function generateMemberFromEmail(email: string): Member {
-  const name = email
-    .split("@")[0]
-    .split(".")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-
-  return {
-    id: crypto.randomUUID(),
-    corporateEmail: email,
-    fullName: name,
-    hireDate: new Date().toISOString().split("T")[0],
-    currentAssignedClient: "Not Assigned",
-    category: "Starter",
-    location: "Unknown",
-    availabilityStatus: "Available",
-  };
-}
-
-function generateMemberProfile(memberId: string): MemberProfile {
-  return {
-    id: crypto.randomUUID(),
-    memberId,
-    assignments: [],
-    rolesAndTasks: [],
-    appreciationsFromClients: [],
-    feedbackComments: [],
-    periodsInTalentPool: [],
-    aboutMe: "",
-    bio: "",
-    contactInfo: { email: "", workPhone: "", cellPhone: "", skype: "" },
-    socialConnections: { linkedin: "", twitter: "" },
-    status: "Active",
-    badges: [],
-    certifications: [],
-    assessments: [],
-  };
 }
 
 // Generic CRUD operations
@@ -425,6 +235,14 @@ export const memberDb = {
   update: (id: string, updates: Partial<Member>) =>
     updateItem("members", id, updates),
   delete: (id: string) => deleteItem("members", id),
+  getByAvailabilityStatus: (status: string) => {
+    const items = getItems<Member>("members");
+    return items.filter((item) => item.availabilityStatus === status);
+  },
+  getByCategory: (category: string) => {
+    const items = getItems<Member>("members");
+    return items.filter((item) => item.category === category);
+  },
 };
 
 // Member Profiles
@@ -482,6 +300,19 @@ export const memberSkillDb = {
     database.data.memberSkills = filtered;
     database.write();
   },
+};
+
+// Clients
+export const clientDb = {
+  getAll: () => getItems<Client>("clients"),
+  getById: (id: string) => {
+    const items = getItems<Client>("clients");
+    return items.find((item) => item.id === id);
+  },
+  add: (item: Client) => addItem("clients", item),
+  update: (id: string, updates: Partial<Client>) =>
+    updateItem("clients", id, updates),
+  delete: (id: string) => deleteItem("clients", id),
 };
 
 // Utility functions

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,8 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Client } from "@/lib/types";
+import { Client } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+import { clientDb, initDatabase } from "@/lib/database";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -36,28 +38,28 @@ export default function ClientsPage() {
   const { toast } = useToast();
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    industry: string;
+    location: string;
+    status: "Active" | "Inactive";
+  }>({
     name: "",
     description: "",
     industry: "",
     location: "",
-    status: "Active" as const,
+    status: "Active",
   });
 
   useEffect(() => {
+    initDatabase();
     loadClients();
   }, []);
 
   const loadClients = () => {
-    const storedClients = localStorage.getItem("clients");
-    if (storedClients) {
-      setClients(JSON.parse(storedClients));
-    }
-  };
-
-  const saveClients = (updatedClients: Client[]) => {
-    localStorage.setItem("clients", JSON.stringify(updatedClients));
-    setClients(updatedClients);
+    const allClients = clientDb.getAll();
+    setClients(allClients);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,12 +68,7 @@ export default function ClientsPage() {
 
     if (editingClient) {
       // Update existing client
-      const updatedClients = clients.map((client) =>
-        client.id === editingClient.id
-          ? { ...client, ...formData, updatedAt: now }
-          : client
-      );
-      saveClients(updatedClients);
+      clientDb.update(editingClient.id, { ...formData, updatedAt: now });
       toast({
         title: "Client updated",
         description: "The client has been updated successfully.",
@@ -84,12 +81,14 @@ export default function ClientsPage() {
         createdAt: now,
         updatedAt: now,
       };
-      saveClients([...clients, newClient]);
+      clientDb.add(newClient);
       toast({
         title: "Client created",
         description: "The new client has been created successfully.",
       });
     }
+
+    loadClients();
 
     setIsDialogOpen(false);
     resetForm();
@@ -109,8 +108,8 @@ export default function ClientsPage() {
 
   const handleDelete = (clientId: string) => {
     if (window.confirm("Are you sure you want to delete this client?")) {
-      const updatedClients = clients.filter((client) => client.id !== clientId);
-      saveClients(updatedClients);
+      clientDb.delete(clientId);
+      loadClients();
       toast({
         title: "Client deleted",
         description: "The client has been deleted successfully.",
@@ -263,10 +262,16 @@ export default function ClientsPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    <Link to={`/client-detail/${client.id}`}>
+                      <Button variant="ghost" size="icon" title="View Details">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </Link>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(client)}
+                      title="Edit Client"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -274,6 +279,7 @@ export default function ClientsPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(client.id)}
+                      title="Delete Client"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

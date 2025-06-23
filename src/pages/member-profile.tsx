@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -8,1015 +8,734 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  ArrowLeft,
-  Plus,
-  Pencil,
-  Trash2,
+  User,
   Mail,
   Phone,
-  Smartphone,
-  MessageSquare,
-  Linkedin,
-  Twitter,
+  MapPin,
+  Calendar,
+  Building,
   Award,
-  BookOpen,
-  ClipboardCheck,
-  Camera,
+  Target,
+  MessageSquare,
+  ExternalLink,
+  Edit,
+  ArrowLeft,
+  Users,
+  Code,
+  Briefcase,
 } from "lucide-react";
-import { toast } from "sonner";
 import {
-  memberStorage,
-  memberProfileStorage,
-  memberSkillStorage,
-  skillStorage,
-  scaleStorage,
-} from "@/lib/storage";
-import type {
-  Member,
-  MemberProfile,
-  MemberSkill,
-  Skill,
-  Scale,
-  Certification,
-  Assessment,
-} from "@/types";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+  memberDb,
+  memberProfileDb,
+  memberSkillDb,
+  skillDb,
+  scaleDb,
+  initDatabase,
+} from "@/lib/database";
+import type { Member, MemberProfile, MemberSkill, Skill, Scale } from "@/types";
 
-export function MemberProfile() {
+export function MemberProfilePage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-
   const [member, setMember] = useState<Member | null>(null);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [memberSkills, setMemberSkills] = useState<MemberSkill[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [scales, setScales] = useState<Scale[]>([]);
-
-  // Dialog states
-  const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
-  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const [isCertDialogOpen, setIsCertDialogOpen] = useState(false);
-  const [isAssessmentDialogOpen, setIsAssessmentDialogOpen] = useState(false);
-
-  // Form data
-  const [skillFormData, setSkillFormData] = useState({
-    skillId: "",
-    scaleId: "",
-    proficiencyValue: "",
-  });
-
-  const [profileFormData, setProfileFormData] = useState<
-    Partial<MemberProfile>
-  >({});
-  const [certFormData, setCertFormData] = useState<Certification>({
-    name: "",
-    license: "",
-    date: "",
-  });
-  const [assessmentFormData, setAssessmentFormData] = useState<Assessment>({
-    name: "",
-    score: "",
-    date: "",
-  });
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      loadData();
-    }
+    initDatabase();
+    loadMemberData();
   }, [id]);
 
-  const loadData = () => {
+  const loadMemberData = () => {
     if (!id) return;
 
-    const memberData = memberStorage.getById(id);
-    if (!memberData) {
-      toast.error("Member not found");
-      navigate("/members");
-      return;
+    try {
+      const memberData = memberDb.getById(id);
+      const profileData = memberProfileDb.getByMemberId(id);
+      const skillsData = memberSkillDb.getByMemberId(id);
+      const allSkills = skillDb.getAll();
+      const allScales = scaleDb.getAll();
+
+      setMember(memberData || null);
+      setProfile(profileData || null);
+      setMemberSkills(skillsData);
+      setSkills(allSkills);
+      setScales(allScales);
+    } catch (error) {
+      console.error("Error loading member data:", error);
+    } finally {
+      setLoading(false);
     }
-
-    setMember(memberData);
-
-    const profileData = memberProfileStorage.getByMemberId(id);
-    if (profileData) {
-      setProfile(profileData);
-      setProfileFormData(profileData);
-    }
-
-    setMemberSkills(memberSkillStorage.getByMemberId(id));
-    setSkills(skillStorage.getAll());
-    setScales(scaleStorage.getAll());
-  };
-
-  const handleAddSkill = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      !skillFormData.skillId ||
-      !skillFormData.scaleId ||
-      !skillFormData.proficiencyValue
-    ) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-
-    if (!member) return;
-
-    const newMemberSkill: MemberSkill = {
-      memberId: member.id,
-      skillId: skillFormData.skillId,
-      scaleId: skillFormData.scaleId,
-      proficiencyValue: skillFormData.proficiencyValue,
-    };
-
-    memberSkillStorage.add(newMemberSkill);
-    toast.success("Skill added successfully");
-    loadData();
-
-    setSkillFormData({
-      skillId: "",
-      scaleId: "",
-      proficiencyValue: "",
-    });
-    setIsSkillDialogOpen(false);
-  };
-
-  const handleRemoveSkill = (skillId: string) => {
-    if (!member) return;
-
-    memberSkillStorage.delete(member.id, skillId);
-    toast.success("Skill removed successfully");
-    loadData();
-  };
-
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!profile) return;
-
-    memberProfileStorage.update(profile.id, profileFormData);
-    toast.success("Profile updated successfully");
-    loadData();
-    setIsProfileDialogOpen(false);
-  };
-
-  const handleAddCertification = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!certFormData.name || !certFormData.license || !certFormData.date) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-
-    if (!profile) return;
-
-    const updatedCertifications = [...profile.certifications, certFormData];
-    memberProfileStorage.update(profile.id, {
-      certifications: updatedCertifications,
-    });
-    toast.success("Certification added successfully");
-    loadData();
-
-    setCertFormData({ name: "", license: "", date: "" });
-    setIsCertDialogOpen(false);
-  };
-
-  const handleAddAssessment = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      !assessmentFormData.name ||
-      !assessmentFormData.score ||
-      !assessmentFormData.date
-    ) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-
-    if (!profile) return;
-
-    const updatedAssessments = [...profile.assessments, assessmentFormData];
-    memberProfileStorage.update(profile.id, {
-      assessments: updatedAssessments,
-    });
-    toast.success("Assessment added successfully");
-    loadData();
-
-    setAssessmentFormData({ name: "", score: "", date: "" });
-    setIsAssessmentDialogOpen(false);
   };
 
   const getSkillName = (skillId: string) => {
-    const skill = skills.find((s) => s.id === skillId);
-    return skill?.name || "Unknown";
+    return skills.find((s) => s.id === skillId)?.name || "Unknown Skill";
   };
 
-  const getScaleName = (scaleId: string) => {
+  const getScaleValue = (scaleId: string, value: string) => {
     const scale = scales.find((s) => s.id === scaleId);
-    return scale?.name || "Unknown";
+    if (!scale) return value;
+
+    const index = parseInt(value) - 1;
+    return scale.values[index] || value;
   };
 
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !member) return;
-
-    // Convert the image to base64
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      memberStorage.update(member.id, { photoUrl: base64 });
-      setMember({ ...member, photoUrl: base64 });
-    };
-    reader.readAsDataURL(file);
+  const getProficiencyColor = (value: string) => {
+    const level = parseInt(value);
+    if (level >= 4) return "bg-green-500";
+    if (level >= 3) return "bg-blue-500";
+    if (level >= 2) return "bg-yellow-500";
+    return "bg-gray-500";
   };
 
-  if (!member || !profile) {
-    return <div>Loading...</div>;
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading member profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!member) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold mb-4">Member Not Found</h2>
+        <p className="text-muted-foreground mb-4">
+          The member profile you're looking for doesn't exist.
+        </p>
+        <Link to="/members">
+          <Button>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Members
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/members")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="relative group">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={member.photoUrl} alt={member.fullName} />
-              <AvatarFallback className="text-lg">
-                {member.fullName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoUpload}
-            />
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute bottom-0 right-0 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Camera className="h-4 w-4" />
+          <Link to="/members">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
             </Button>
-          </div>
+          </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {member.fullName}
-            </h1>
+            <h1 className="text-3xl font-bold">{member.fullName}</h1>
             <p className="text-muted-foreground">{member.corporateEmail}</p>
           </div>
         </div>
+        <Button>
+          <Edit className="h-4 w-4 mr-2" />
+          Edit Profile
+        </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Basic Info Card */}
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Category</p>
-              <Badge variant="secondary">{member.category}</Badge>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Location</p>
-              <p className="font-medium">{member.location}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Hire Date</p>
-              <p className="font-medium">
-                {new Date(member.hireDate).toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Current Client</p>
-              <p className="font-medium">
-                {member.currentAssignedClient || "None"}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Availability</p>
-              <Badge
-                variant={
-                  member.availabilityStatus === "Available"
-                    ? "default"
-                    : member.availabilityStatus === "Available Soon"
-                    ? "secondary"
-                    : "outline"
-                }
-              >
-                {member.availabilityStatus}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Profile Details */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Profile Details</CardTitle>
-              <Button size="sm" onClick={() => setIsProfileDialogOpen(true)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="about">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="about">About</TabsTrigger>
-                <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="about" className="space-y-4">
-                <div>
-                  <h3 className="font-semibold mb-2">Bio</h3>
-                  <p className="text-sm">{profile.bio || "No bio provided"}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">About Me</h3>
-                  <p className="text-sm">
-                    {profile.aboutMe || "No description provided"}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Status</h3>
-                  <p className="text-sm">{profile.status || "No status set"}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Roles & Tasks</h3>
-                  {profile.rolesAndTasks.length > 0 ? (
-                    <ul className="list-disc list-inside text-sm space-y-1">
-                      {profile.rolesAndTasks.map((role, index) => (
-                        <li key={index}>{role}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No roles defined
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="contact" className="space-y-4">
-                <div className="space-y-2">
-                  {profile.contactInfo.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {profile.contactInfo.email}
-                      </span>
-                    </div>
-                  )}
-                  {profile.contactInfo.workPhone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {profile.contactInfo.workPhone}
-                      </span>
-                    </div>
-                  )}
-                  {profile.contactInfo.cellPhone && (
-                    <div className="flex items-center gap-2">
-                      <Smartphone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {profile.contactInfo.cellPhone}
-                      </span>
-                    </div>
-                  )}
-                  {profile.contactInfo.skype && (
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {profile.contactInfo.skype}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2 pt-4">
-                  <h3 className="font-semibold">Social Connections</h3>
-                  {profile.socialConnections.linkedin && (
-                    <div className="flex items-center gap-2">
-                      <Linkedin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {profile.socialConnections.linkedin}
-                      </span>
-                    </div>
-                  )}
-                  {profile.socialConnections.twitter && (
-                    <div className="flex items-center gap-2">
-                      <Twitter className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {profile.socialConnections.twitter}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="history" className="space-y-4">
-                <div>
-                  <h3 className="font-semibold mb-2">Assignments</h3>
-                  {profile.assignments.length > 0 ? (
-                    <ul className="list-disc list-inside text-sm space-y-1">
-                      {profile.assignments.map((assignment, index) => (
-                        <li key={index}>{assignment}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No assignments recorded
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Client Appreciations</h3>
-                  {profile.appreciationsFromClients.length > 0 ? (
-                    <ul className="list-disc list-inside text-sm space-y-1">
-                      {profile.appreciationsFromClients.map(
-                        (appreciation, index) => (
-                          <li key={index}>{appreciation}</li>
-                        )
-                      )}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No appreciations recorded
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Feedback</h3>
-                  {profile.feedbackComments.length > 0 ? (
-                    <ul className="list-disc list-inside text-sm space-y-1">
-                      {profile.feedbackComments.map((feedback, index) => (
-                        <li key={index}>{feedback}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No feedback recorded
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Skills Section */}
+      {/* Member Overview Card */}
       <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Skills</CardTitle>
-              <CardDescription>
-                {memberSkills.length} skill
-                {memberSkills.length !== 1 ? "s" : ""} registered
-              </CardDescription>
-            </div>
-            <Button onClick={() => setIsSkillDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Skill
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {memberSkills.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              No skills added yet. Click "Add Skill" to add one.
-            </p>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {memberSkills.map((ms) => (
-                <Card key={ms.skillId}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <h4 className="font-semibold">
-                          {getSkillName(ms.skillId)}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {getScaleName(ms.scaleId)}
-                        </p>
-                        <Badge variant="secondary">{ms.proficiencyValue}</Badge>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveSkill(ms.skillId)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-6">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={member.photoUrl || ""} />
+              <AvatarFallback className="text-lg">
+                {getInitials(member.fullName)}
+              </AvatarFallback>
+            </Avatar>
 
-      {/* Certifications & Assessments */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Certifications</CardTitle>
-                <CardDescription>
-                  {profile.certifications.length} certification
-                  {profile.certifications.length !== 1 ? "s" : ""}
-                </CardDescription>
-              </div>
-              <Button size="sm" onClick={() => setIsCertDialogOpen(true)}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {profile.certifications.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No certifications added
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {profile.certifications.map((cert, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <Award className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{cert.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        License: {cert.license} •{" "}
-                        {new Date(cert.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Assessments</CardTitle>
-                <CardDescription>
-                  {profile.assessments.length} assessment
-                  {profile.assessments.length !== 1 ? "s" : ""}
-                </CardDescription>
-              </div>
-              <Button size="sm" onClick={() => setIsAssessmentDialogOpen(true)}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {profile.assessments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No assessments added
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {profile.assessments.map((assessment, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <ClipboardCheck className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{assessment.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Score: {assessment.score} •{" "}
-                        {new Date(assessment.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Badges */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Badges</CardTitle>
-          <CardDescription>
-            {profile.badges.length} badge
-            {profile.badges.length !== 1 ? "s" : ""} earned
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {profile.badges.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No badges earned yet
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {profile.badges.map((badge, index) => (
-                <Badge key={index} variant="secondary">
-                  <BookOpen className="h-3 w-3 mr-1" />
-                  {badge}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Add Skill Dialog */}
-      <Dialog open={isSkillDialogOpen} onOpenChange={setIsSkillDialogOpen}>
-        <DialogContent>
-          <form onSubmit={handleAddSkill}>
-            <DialogHeader>
-              <DialogTitle>Add Skill</DialogTitle>
-              <DialogDescription>
-                Add a new skill to the member's profile
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Skill</label>
-                <Select
-                  value={skillFormData.skillId}
-                  onValueChange={(value) =>
-                    setSkillFormData({ ...skillFormData, skillId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a skill" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {skills.map((skill) => (
-                      <SelectItem key={skill.id} value={skill.id}>
-                        {skill.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Scale</label>
-                <Select
-                  value={skillFormData.scaleId}
-                  onValueChange={(value) =>
-                    setSkillFormData({ ...skillFormData, scaleId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a scale" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {scales.map((scale) => (
-                      <SelectItem key={scale.id} value={scale.id}>
-                        {scale.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {skillFormData.scaleId && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Proficiency</label>
-                  <Select
-                    value={skillFormData.proficiencyValue}
-                    onValueChange={(value) =>
-                      setSkillFormData({
-                        ...skillFormData,
-                        proficiencyValue: value,
-                      })
+            <div className="flex-1 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{member.corporateEmail}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {member.currentAssignedClient}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{member.location}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Hired: {member.hireDate}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <Badge variant="secondary">{member.category}</Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <Badge
+                    variant={
+                      member.availabilityStatus === "Available"
+                        ? "default"
+                        : member.availabilityStatus === "Available Soon"
+                        ? "secondary"
+                        : "outline"
                     }
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select proficiency level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {scales
-                        .find((s) => s.id === skillFormData.scaleId)
-                        ?.values.map((value) => (
-                          <SelectItem key={value} value={value}>
-                            {value}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                    {member.availabilityStatus}
+                  </Badge>
+                </div>
+              </div>
+
+              {profile?.bio && (
+                <div>
+                  <h3 className="font-medium mb-2">Bio</h3>
+                  <p className="text-sm text-muted-foreground">{profile.bio}</p>
                 </div>
               )}
             </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsSkillDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Add Skill</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Edit Profile Dialog */}
-      <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <form onSubmit={handleUpdateProfile}>
-            <DialogHeader>
-              <DialogTitle>Edit Profile</DialogTitle>
-              <DialogDescription>
-                Update the member's profile information
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Bio</label>
-                <Input
-                  value={profileFormData.bio || ""}
-                  onChange={(e) =>
-                    setProfileFormData({
-                      ...profileFormData,
-                      bio: e.target.value,
-                    })
-                  }
-                  placeholder="Short bio"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">About Me</label>
-                <Textarea
-                  value={profileFormData.aboutMe || ""}
-                  onChange={(e) =>
-                    setProfileFormData({
-                      ...profileFormData,
-                      aboutMe: e.target.value,
-                    })
-                  }
-                  placeholder="Tell us about yourself"
-                  rows={4}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Input
-                  value={profileFormData.status || ""}
-                  onChange={(e) =>
-                    setProfileFormData({
-                      ...profileFormData,
-                      status: e.target.value,
-                    })
-                  }
-                  placeholder="Current status"
-                />
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Work Phone</label>
-                  <Input
-                    value={profileFormData.contactInfo?.workPhone || ""}
-                    onChange={(e) =>
-                      setProfileFormData({
-                        ...profileFormData,
-                        contactInfo: {
-                          ...profileFormData.contactInfo!,
-                          workPhone: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="+1 234 567 8900"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Cell Phone</label>
-                  <Input
-                    value={profileFormData.contactInfo?.cellPhone || ""}
-                    onChange={(e) =>
-                      setProfileFormData({
-                        ...profileFormData,
-                        contactInfo: {
-                          ...profileFormData.contactInfo!,
-                          cellPhone: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="+1 234 567 8900"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Skype</label>
-                  <Input
-                    value={profileFormData.contactInfo?.skype || ""}
-                    onChange={(e) =>
-                      setProfileFormData({
-                        ...profileFormData,
-                        contactInfo: {
-                          ...profileFormData.contactInfo!,
-                          skype: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="skype.username"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">LinkedIn</label>
-                  <Input
-                    value={profileFormData.socialConnections?.linkedin || ""}
-                    onChange={(e) =>
-                      setProfileFormData({
-                        ...profileFormData,
-                        socialConnections: {
-                          ...profileFormData.socialConnections!,
-                          linkedin: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="linkedin.com/in/username"
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsProfileDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Update Profile</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Tabs for detailed information */}
+      <Tabs defaultValue="skills" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="skills">Skills</TabsTrigger>
+          <TabsTrigger value="assignments">Assignments</TabsTrigger>
+          <TabsTrigger value="certifications">Certifications</TabsTrigger>
+          <TabsTrigger value="about">About</TabsTrigger>
+        </TabsList>
 
-      {/* Add Certification Dialog */}
-      <Dialog open={isCertDialogOpen} onOpenChange={setIsCertDialogOpen}>
-        <DialogContent>
-          <form onSubmit={handleAddCertification}>
-            <DialogHeader>
-              <DialogTitle>Add Certification</DialogTitle>
-              <DialogDescription>
-                Add a new certification to the member's profile
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Certification Name
-                </label>
-                <Input
-                  value={certFormData.name}
-                  onChange={(e) =>
-                    setCertFormData({ ...certFormData, name: e.target.value })
-                  }
-                  placeholder="e.g., AWS Certified Solutions Architect"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">License Number</label>
-                <Input
-                  value={certFormData.license}
-                  onChange={(e) =>
-                    setCertFormData({
-                      ...certFormData,
-                      license: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., ABC123456"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date Obtained</label>
-                <Input
-                  type="date"
-                  value={certFormData.date}
-                  onChange={(e) =>
-                    setCertFormData({ ...certFormData, date: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCertDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Add Certification</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        {/* Skills Tab */}
+        <TabsContent value="skills">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Code className="h-5 w-5" />
+                Technical Skills ({memberSkills.length})
+              </CardTitle>
+              <CardDescription>Skills and proficiency levels</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {memberSkills.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No skills recorded yet.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {memberSkills.map((memberSkill) => (
+                    <Card
+                      key={`${memberSkill.skillId}-${memberSkill.scaleId}`}
+                      className="p-4"
+                    >
+                      <div className="space-y-2">
+                        <h4 className="font-medium">
+                          {getSkillName(memberSkill.skillId)}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-3 h-3 rounded-full ${getProficiencyColor(
+                              memberSkill.proficiencyValue
+                            )}`}
+                          ></div>
+                          <span className="text-sm">
+                            Level {memberSkill.proficiencyValue} -{" "}
+                            {getScaleValue(
+                              memberSkill.scaleId,
+                              memberSkill.proficiencyValue
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* Add Assessment Dialog */}
-      <Dialog
-        open={isAssessmentDialogOpen}
-        onOpenChange={setIsAssessmentDialogOpen}
-      >
-        <DialogContent>
-          <form onSubmit={handleAddAssessment}>
-            <DialogHeader>
-              <DialogTitle>Add Assessment</DialogTitle>
-              <DialogDescription>
-                Add a new assessment result to the member's profile
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Assessment Name</label>
-                <Input
-                  value={assessmentFormData.name}
-                  onChange={(e) =>
-                    setAssessmentFormData({
-                      ...assessmentFormData,
-                      name: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., Sales Proficiency Exam"
-                />
+        {/* Assignments Tab */}
+        <TabsContent value="assignments">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                Assignment History ({profile?.assignments?.length || 0})
+              </CardTitle>
+              <CardDescription>
+                Complete timeline of assignments since hiring
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!profile?.assignments?.length ? (
+                <div className="text-center py-8">
+                  <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">
+                    No assignments recorded yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Timeline Header */}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>Timeline since hiring: {member.hireDate}</span>
+                  </div>
+
+                  {/* Timeline */}
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border"></div>
+
+                    {profile.assignments
+                      .sort(
+                        (a, b) =>
+                          new Date(a.startDate).getTime() -
+                          new Date(b.startDate).getTime()
+                      )
+                      .map((assignment) => (
+                        <div
+                          key={assignment.id}
+                          className="relative flex gap-6 pb-8"
+                        >
+                          {/* Timeline dot */}
+                          <div className="relative z-10 flex h-8 w-8 items-center justify-center">
+                            <div
+                              className={`h-3 w-3 rounded-full ${
+                                assignment.endDate
+                                  ? "bg-blue-500"
+                                  : "bg-green-500"
+                              } border-2 border-background`}
+                            ></div>
+                          </div>
+
+                          {/* Assignment Card */}
+                          <div className="flex-1 min-w-0">
+                            <Card className="mb-0">
+                              <CardContent className="p-4">
+                                <div className="space-y-3">
+                                  {/* Header */}
+                                  <div className="flex items-start justify-between">
+                                    <div className="min-w-0 flex-1">
+                                      <h4 className="font-semibold text-lg">
+                                        {assignment.projectName}
+                                      </h4>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <Building className="h-4 w-4 text-muted-foreground" />
+                                        <span className="text-sm font-medium text-blue-600">
+                                          {assignment.clientName}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Badge
+                                      variant={
+                                        assignment.endDate
+                                          ? "secondary"
+                                          : "default"
+                                      }
+                                    >
+                                      {assignment.role}
+                                    </Badge>
+                                  </div>
+
+                                  {/* Duration */}
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>
+                                      {new Date(
+                                        assignment.startDate
+                                      ).toLocaleDateString()}{" "}
+                                      -{" "}
+                                      {assignment.endDate
+                                        ? new Date(
+                                            assignment.endDate
+                                          ).toLocaleDateString()
+                                        : "Present"}
+                                    </span>
+                                    <span className="text-xs">
+                                      (
+                                      {assignment.endDate
+                                        ? Math.ceil(
+                                            (new Date(
+                                              assignment.endDate
+                                            ).getTime() -
+                                              new Date(
+                                                assignment.startDate
+                                              ).getTime()) /
+                                              (1000 * 60 * 60 * 24 * 30)
+                                          )
+                                        : Math.ceil(
+                                            (new Date().getTime() -
+                                              new Date(
+                                                assignment.startDate
+                                              ).getTime()) /
+                                              (1000 * 60 * 60 * 24 * 30)
+                                          )}{" "}
+                                      months)
+                                    </span>
+                                  </div>
+
+                                  {/* Description */}
+                                  {assignment.description && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {assignment.description}
+                                    </p>
+                                  )}
+
+                                  {/* Technologies */}
+                                  {assignment.technologies &&
+                                    assignment.technologies.length > 0 && (
+                                      <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                          <Code className="h-4 w-4 text-muted-foreground" />
+                                          <span className="text-sm font-medium">
+                                            Technologies:
+                                          </span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                          {assignment.technologies.map(
+                                            (tech) => (
+                                              <Badge
+                                                key={tech}
+                                                variant="outline"
+                                                className="text-xs"
+                                              >
+                                                {tech}
+                                              </Badge>
+                                            )
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                  {/* Status indicator */}
+                                  <div className="flex items-center gap-2 pt-2 border-t">
+                                    <div
+                                      className={`h-2 w-2 rounded-full ${
+                                        assignment.endDate
+                                          ? "bg-gray-400"
+                                          : "bg-green-500"
+                                      }`}
+                                    ></div>
+                                    <span className="text-xs text-muted-foreground">
+                                      {assignment.endDate
+                                        ? "Completed"
+                                        : "Current Assignment"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+                    <Card className="p-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {profile.assignments.length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Total Assignments
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {
+                            new Set(
+                              profile.assignments.map((a) => a.clientName)
+                            ).size
+                          }
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Unique Clients
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {profile.assignments.filter((a) => !a.endDate).length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Current Assignments
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Certifications Tab */}
+        <TabsContent value="certifications">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                Certifications & Assessments
+              </CardTitle>
+              <CardDescription>
+                Professional certifications, licenses, and assessments
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Certifications */}
+                <div>
+                  <h4 className="font-medium mb-3">
+                    Certifications ({profile?.certifications.length || 0})
+                  </h4>
+                  {!profile?.certifications.length ? (
+                    <p className="text-center text-muted-foreground py-4">
+                      No certifications recorded yet.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {profile.certifications.map((cert) => (
+                        <Card key={cert.id} className="p-4">
+                          <div className="space-y-2">
+                            <h5 className="font-medium">{cert.name}</h5>
+                            <p className="text-sm text-muted-foreground">
+                              {cert.issuer}
+                            </p>
+                            <div className="text-sm">
+                              <div>License: {cert.license}</div>
+                              <div>Issued: {cert.date}</div>
+                              {cert.expiryDate && (
+                                <div>Expires: {cert.expiryDate}</div>
+                              )}
+                            </div>
+                            {cert.verificationUrl && (
+                              <a
+                                href={cert.verificationUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                              >
+                                Verify <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Assessments */}
+                <div>
+                  <h4 className="font-medium mb-3">
+                    Assessments ({profile?.assessments.length || 0})
+                  </h4>
+                  {!profile?.assessments.length ? (
+                    <p className="text-center text-muted-foreground py-4">
+                      No assessments recorded yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {profile.assessments.map((assessment) => (
+                        <Card key={assessment.id} className="p-4">
+                          <div className="space-y-2">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h5 className="font-medium">
+                                  {assessment.name}
+                                </h5>
+                                <p className="text-sm text-muted-foreground">
+                                  Assessed by: {assessment.assessor}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-lg font-bold">
+                                  {assessment.score}/{assessment.maxScore}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {assessment.completedDate}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Score</label>
-                <Input
-                  value={assessmentFormData.score}
-                  onChange={(e) =>
-                    setAssessmentFormData({
-                      ...assessmentFormData,
-                      score: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., 85% or 4.5/5"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date Taken</label>
-                <Input
-                  type="date"
-                  value={assessmentFormData.date}
-                  onChange={(e) =>
-                    setAssessmentFormData({
-                      ...assessmentFormData,
-                      date: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsAssessmentDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Add Assessment</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* About Tab */}
+        <TabsContent value="about">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* About Me & Contact */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  About & Contact
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {profile?.aboutMe && (
+                  <div>
+                    <h4 className="font-medium mb-2">About Me</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {profile.aboutMe}
+                    </p>
+                  </div>
+                )}
+
+                {profile?.contactInfo && (
+                  <div>
+                    <h4 className="font-medium mb-2">Contact Information</h4>
+                    <div className="space-y-2 text-sm">
+                      {profile.contactInfo.workPhone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          <span>Work: {profile.contactInfo.workPhone}</span>
+                        </div>
+                      )}
+                      {profile.contactInfo.cellPhone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          <span>Cell: {profile.contactInfo.cellPhone}</span>
+                        </div>
+                      )}
+                      {profile.contactInfo.skype && (
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Skype: {profile.contactInfo.skype}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {profile?.socialConnections && (
+                  <div>
+                    <h4 className="font-medium mb-2">Social Connections</h4>
+                    <div className="space-y-2 text-sm">
+                      {profile.socialConnections.linkedin && (
+                        <a
+                          href={profile.socialConnections.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                        >
+                          LinkedIn <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                      {profile.socialConnections.twitter && (
+                        <a
+                          href={profile.socialConnections.twitter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                        >
+                          Twitter <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Career & Feedback */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Career & Feedback
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {profile?.careerInterests &&
+                  profile.careerInterests.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Career Interests</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {profile.careerInterests.map((interest, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {profile?.professionalGoals &&
+                  profile.professionalGoals.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Professional Goals</h4>
+                      <div className="space-y-1">
+                        {profile.professionalGoals.map((goal, index) => (
+                          <p
+                            key={index}
+                            className="text-sm text-muted-foreground"
+                          >
+                            • {goal}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {profile?.appreciationsFromClients &&
+                  profile.appreciationsFromClients.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">
+                        Recent Client Feedback
+                      </h4>
+                      <div className="space-y-2">
+                        {profile.appreciationsFromClients
+                          .slice(0, 3)
+                          .map((appreciation, index) => (
+                            <div key={index} className="p-2 bg-muted rounded">
+                              <p className="text-sm text-muted-foreground">
+                                {appreciation}
+                              </p>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

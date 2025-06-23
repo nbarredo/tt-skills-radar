@@ -8,9 +8,7 @@ import { toast } from "sonner";
 import type { Member, MemberProfile, Skill, MemberSkill } from "@/types";
 import {
   memberDb,
-  memberProfileDb,
   skillDb,
-  memberSkillDb,
   bulkOperations,
   initDatabase,
 } from "@/lib/database";
@@ -118,6 +116,8 @@ export function ExcelImport() {
     badges: [],
     certifications: [],
     assessments: [],
+    careerInterests: [],
+    professionalGoals: [],
   });
 
   const processExcelData = async (data: ExcelRow[]): Promise<ImportStats> => {

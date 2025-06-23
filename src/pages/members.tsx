@@ -36,10 +36,11 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import {
-  memberStorage,
-  memberProfileStorage,
-  memberSkillStorage,
-} from "@/lib/storage";
+  memberDb,
+  memberProfileDb,
+  memberSkillDb,
+  initDatabase,
+} from "@/lib/database";
 import type { Member, MemberProfile } from "@/types";
 
 export function Members() {
@@ -57,11 +58,12 @@ export function Members() {
   });
 
   useEffect(() => {
+    initDatabase();
     loadMembers();
   }, []);
 
   const loadMembers = () => {
-    setMembers(memberStorage.getAll());
+    setMembers(memberDb.getAll());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -81,11 +83,11 @@ export function Members() {
 
     if (editingMember) {
       // Update existing
-      memberStorage.update(editingMember.id, formData);
+      memberDb.update(editingMember.id, formData);
       toast.success("Member updated successfully");
     } else {
       // Check if email already exists
-      const existingMember = memberStorage.getByEmail(formData.corporateEmail);
+      const existingMember = memberDb.getByEmail(formData.corporateEmail);
       if (existingMember) {
         toast.error("A member with this email already exists");
         return;
@@ -96,7 +98,7 @@ export function Members() {
         id: crypto.randomUUID(),
         ...formData,
       };
-      memberStorage.add(newMember);
+      memberDb.add(newMember);
 
       // Create empty profile for the new member
       const newProfile: MemberProfile = {
@@ -113,12 +115,14 @@ export function Members() {
           email: newMember.corporateEmail,
         },
         socialConnections: {},
-        status: "",
+        status: "Active",
         badges: [],
         certifications: [],
         assessments: [],
+        careerInterests: [],
+        professionalGoals: [],
       };
-      memberProfileStorage.add(newProfile);
+      memberProfileDb.add(newProfile);
 
       toast.success("Member created successfully");
     }
@@ -148,16 +152,16 @@ export function Members() {
       )
     ) {
       // Delete member
-      memberStorage.delete(id);
+      memberDb.delete(id);
 
       // Delete associated profile
-      const profile = memberProfileStorage.getByMemberId(id);
+      const profile = memberProfileDb.getByMemberId(id);
       if (profile) {
-        memberProfileStorage.delete(profile.id);
+        memberProfileDb.delete(profile.id);
       }
 
       // Delete associated skills
-      memberSkillStorage.deleteByMemberId(id);
+      memberSkillDb.deleteByMemberId(id);
 
       toast.success("Member deleted successfully");
       loadMembers();
@@ -245,7 +249,7 @@ export function Members() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Link to={`/members/${member.id}`}>
+                        <Link to={`/member-profile/${member.id}`}>
                           <Button variant="ghost" size="icon">
                             <Eye className="h-4 w-4" />
                           </Button>

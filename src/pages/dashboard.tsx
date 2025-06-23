@@ -20,6 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { ExcelImport } from "@/components/excel-import";
 import { EntityImport } from "@/components/entity-import";
 import { DataLoader } from "@/components/data-loader";
+import { ClientHistoryQuery } from "@/components/client-history-query";
+import { SkillsByCategoryQuery } from "@/components/skills-by-category-query";
+
 import {
   Users,
   Brain,
@@ -441,6 +444,37 @@ export function Dashboard() {
         </CardContent>
       </Card>
 
+      {/* Advanced Queries */}
+      {isDataLoaded && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Client History Query */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Members by Client History</CardTitle>
+              <CardDescription>
+                Find all members who have worked for a specific client
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ClientHistoryQuery />
+            </CardContent>
+          </Card>
+
+          {/* Skills by Category Query */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Skills by Techie Category</CardTitle>
+              <CardDescription>
+                View all skills possessed by members in a specific category
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SkillsByCategoryQuery />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Members List */}
       <Card>
         <CardHeader>
@@ -461,7 +495,7 @@ export function Dashboard() {
               filteredMembers.map((member) => (
                 <Link
                   key={member.id}
-                  to={`/members/${member.id}`}
+                  to={`/member-profile/${member.id}`}
                   className="block"
                 >
                   <Card className="hover:bg-accent transition-colors">

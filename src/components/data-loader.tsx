@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -84,13 +84,13 @@ export function DataLoader({ onDataLoaded }: DataLoaderProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
-          Load Excel Data
+          Load Database
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-gray-600">
-          Load the bootcamp skills data from the Excel file to initialize the
-          database.
+          Load the comprehensive skills database with members, skills, and
+          assignments.
         </div>
 
         {error && (
@@ -114,12 +114,12 @@ export function DataLoader({ onDataLoaded }: DataLoaderProps) {
           disabled={isLoading}
           className="w-full"
         >
-          {isLoading ? "Loading..." : "Load Excel Data"}
+          {isLoading ? "Loading..." : "Load Database"}
         </Button>
 
         <div className="text-xs text-gray-500">
-          This will process 8,346 rows of skill data and create members, skills,
-          and skill assignments.
+          This will load 8 members, 15 skills, 6 knowledge areas, and
+          comprehensive skill assignments.
         </div>
       </CardContent>
     </Card>

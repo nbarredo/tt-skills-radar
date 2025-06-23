@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Member, Client, MemberAssignment } from "@/lib/types";
+import { Member, Client, MemberAssignment } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function MemberAssignmentsPage() {
@@ -31,13 +31,21 @@ export default function MemberAssignmentsPage() {
   const { toast } = useToast();
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    memberId: string;
+    clientId: string;
+    startDate: string;
+    endDate: string;
+    role: string;
+    status: "Active" | "Completed" | "Planned";
+    notes: string;
+  }>({
     memberId: "",
     clientId: "",
     startDate: "",
     endDate: "",
     role: "",
-    status: "Active" as const,
+    status: "Active",
     notes: "",
   });
 

@@ -49,34 +49,84 @@ export interface SocialConnections {
   twitter?: string;
 }
 
+export interface Assignment {
+  id: string;
+  clientName: string;
+  projectName: string;
+  role: string;
+  startDate: string;
+  endDate?: string;
+  description: string;
+  technologies?: string[];
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+}
+
+export interface Appreciation {
+  id: string;
+  clientName: string;
+  message: string;
+  date: string;
+  rating?: number;
+}
+
+export interface Feedback {
+  id: string;
+  source: string;
+  message: string;
+  date: string;
+  type: "positive" | "constructive" | "neutral";
+}
+
+export interface TalentPoolPeriod {
+  id: string;
+  startDate: string;
+  endDate?: string;
+  reason: string;
+}
+
 export interface Certification {
+  id: string;
   name: string;
   license: string;
+  issuer: string;
   date: string;
+  expiryDate?: string;
+  verificationUrl?: string;
 }
 
 export interface Assessment {
+  id: string;
   name: string;
-  score: string;
-  date: string;
+  score: number;
+  maxScore: number;
+  completedDate: string;
+  assessor: string;
 }
 
 export interface MemberProfile {
   id: string;
   memberId: string;
-  assignments: string[];
+  assignments: Assignment[];
   rolesAndTasks: string[];
   appreciationsFromClients: string[];
   feedbackComments: string[];
-  periodsInTalentPool: string[];
+  periodsInTalentPool: TalentPoolPeriod[];
   aboutMe: string;
   bio: string;
   contactInfo: ContactInfo;
   socialConnections: SocialConnections;
-  status: string;
+  status: "Active" | "Inactive" | "On Leave" | "Terminated";
   badges: string[];
   certifications: Certification[];
   assessments: Assessment[];
+  careerInterests: string[];
+  professionalGoals: string[];
 }
 
 export interface MemberSkill {
@@ -84,4 +134,28 @@ export interface MemberSkill {
   skillId: string;
   scaleId: string;
   proficiencyValue: string;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  description?: string;
+  industry?: string;
+  location?: string;
+  status: "Active" | "Inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MemberAssignment {
+  id: string;
+  memberId: string;
+  clientId: string;
+  startDate: string;
+  endDate?: string;
+  role?: string;
+  status: "Active" | "Completed" | "Planned";
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }

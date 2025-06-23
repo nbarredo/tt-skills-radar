@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { knowledgeAreaStorage } from "@/lib/storage";
+import { knowledgeAreaDb, initDatabase } from "@/lib/database";
 import type { KnowledgeArea } from "@/types";
 
 export function KnowledgeAreas() {
@@ -40,11 +40,12 @@ export function KnowledgeAreas() {
   });
 
   useEffect(() => {
+    initDatabase();
     loadKnowledgeAreas();
   }, []);
 
   const loadKnowledgeAreas = () => {
-    setKnowledgeAreas(knowledgeAreaStorage.getAll());
+    setKnowledgeAreas(knowledgeAreaDb.getAll());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -57,7 +58,7 @@ export function KnowledgeAreas() {
 
     if (editingArea) {
       // Update existing
-      knowledgeAreaStorage.update(editingArea.id, formData);
+      knowledgeAreaDb.update(editingArea.id, formData);
       toast.success("Knowledge area updated successfully");
     } else {
       // Create new
@@ -65,7 +66,7 @@ export function KnowledgeAreas() {
         id: crypto.randomUUID(),
         ...formData,
       };
-      knowledgeAreaStorage.add(newArea);
+      knowledgeAreaDb.add(newArea);
       toast.success("Knowledge area created successfully");
     }
 
@@ -84,7 +85,7 @@ export function KnowledgeAreas() {
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this knowledge area?")) {
-      knowledgeAreaStorage.delete(id);
+      knowledgeAreaDb.delete(id);
       toast.success("Knowledge area deleted successfully");
       loadKnowledgeAreas();
     }

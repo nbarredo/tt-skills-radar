@@ -34,7 +34,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { scaleStorage } from "@/lib/storage";
+import { scaleDb, initDatabase } from "@/lib/database";
 import type { Scale } from "@/types";
 
 export function Scales() {
@@ -49,11 +49,12 @@ export function Scales() {
   const [newValue, setNewValue] = useState("");
 
   useEffect(() => {
+    initDatabase();
     loadScales();
   }, []);
 
   const loadScales = () => {
-    setScales(scaleStorage.getAll());
+    setScales(scaleDb.getAll());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -70,7 +71,7 @@ export function Scales() {
 
     if (editingScale) {
       // Update existing
-      scaleStorage.update(editingScale.id, formData);
+      scaleDb.update(editingScale.id, formData);
       toast.success("Scale updated successfully");
     } else {
       // Create new
@@ -78,7 +79,7 @@ export function Scales() {
         id: crypto.randomUUID(),
         ...formData,
       };
-      scaleStorage.add(newScale);
+      scaleDb.add(newScale);
       toast.success("Scale created successfully");
     }
 
@@ -98,7 +99,7 @@ export function Scales() {
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this scale?")) {
-      scaleStorage.delete(id);
+      scaleDb.delete(id);
       toast.success("Scale deleted successfully");
       loadScales();
     }
