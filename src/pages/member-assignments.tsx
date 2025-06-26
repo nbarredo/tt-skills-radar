@@ -19,6 +19,14 @@ import {
 } from "@/components/ui/select";
 import { Member, Client, MemberAssignment } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  memberDb,
+  clientDb,
+  memberProfileDb,
+  initDatabase,
+  loadExcelData,
+} from "@/lib/database";
+import { Assignment } from "@/types";
 
 export default function MemberAssignmentsPage() {
   const [members, setMembers] = useState<Member[]>([]);
@@ -50,17 +58,34 @@ export default function MemberAssignmentsPage() {
   });
 
   useEffect(() => {
+    initDatabase();
     loadData();
   }, []);
 
-  const loadData = () => {
-    const storedMembers = localStorage.getItem("members");
-    const storedClients = localStorage.getItem("clients");
-    const storedAssignments = localStorage.getItem("memberAssignments");
+  const loadData = async () => {
+    try {
+      await loadExcelData();
 
-    if (storedMembers) setMembers(JSON.parse(storedMembers));
-    if (storedClients) setClients(JSON.parse(storedClients));
-    if (storedAssignments) setAssignments(JSON.parse(storedAssignments));
+      // Load members and clients from database
+      const loadedMembers = memberDb.getAll();
+      const loadedClients = clientDb.getAll();
+
+      setMembers(loadedMembers);
+      setClients(loadedClients);
+
+      // Load assignments from localStorage (for now, until we add it to the database schema)
+      const storedAssignments = localStorage.getItem("memberAssignments");
+      if (storedAssignments) {
+        setAssignments(JSON.parse(storedAssignments));
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load data. Please refresh the page.",
+        variant: "destructive",
+      });
+    }
   };
 
   const saveAssignments = (updatedAssignments: MemberAssignment[]) => {
@@ -77,17 +102,103 @@ export default function MemberAssignmentsPage() {
 
     if (editingAssignment) {
       // Update existing assignment
-      const updatedAssignments = assignments.map((assignment) =>
+      let updatedAssignments = assignments.map((assignment) =>
         assignment.id === editingAssignment.id
           ? { ...assignment, ...formData, updatedAt: now }
           : assignment
       );
+
+      // If changing an assignment to Active, end any other active assignments for this member
+      if (
+        formData.status === "Active" &&
+        editingAssignment.status !== "Active"
+      ) {
+        updatedAssignments = updatedAssignments.map((assignment) => {
+          if (
+            assignment.memberId === formData.memberId &&
+            assignment.status === "Active" &&
+            assignment.id !== editingAssignment.id
+          ) {
+            // End other active assignments
+            return {
+              ...assignment,
+              status: "Completed" as const,
+              endDate: formData.startDate,
+              updatedAt: now,
+            };
+          }
+          return assignment;
+        });
+
+        // Also end assignments in the member profile
+        endCurrentProfileAssignments(formData.memberId, formData.startDate);
+      }
+
       saveAssignments(updatedAssignments);
+
+      // Update member's current assigned client if this is an active assignment
+      if (formData.status === "Active") {
+        const clientName =
+          clients.find((c) => c.id === formData.clientId)?.name || "";
+        memberDb.update(formData.memberId, {
+          currentAssignedClient: clientName,
+          availabilityStatus: "Assigned",
+        });
+
+        // Also update the member profile with the assignment
+        updateMemberProfileAssignment(formData, clientName, true);
+
+        // Refresh members data
+        setMembers(memberDb.getAll());
+      } else if (formData.status === "Completed") {
+        // If marking assignment as completed, check if member should be set to Available
+        const hasOtherActiveAssignments = updatedAssignments.some(
+          (a) =>
+            a.memberId === formData.memberId &&
+            a.status === "Active" &&
+            a.id !== editingAssignment.id
+        );
+
+        if (!hasOtherActiveAssignments) {
+          memberDb.update(formData.memberId, {
+            currentAssignedClient: "Available",
+            availabilityStatus: "Available",
+          });
+          // Refresh members data
+          setMembers(memberDb.getAll());
+        }
+      }
+
       toast({
         title: "Assignment updated",
         description: "The assignment has been updated successfully.",
       });
     } else {
+      // Create new assignment - first end any current assignments
+      let updatedAssignments = [...assignments];
+
+      // If this is an active assignment, end any other active assignments for this member
+      if (formData.status === "Active") {
+        updatedAssignments = updatedAssignments.map((assignment) => {
+          if (
+            assignment.memberId === formData.memberId &&
+            assignment.status === "Active"
+          ) {
+            // End the current assignment
+            return {
+              ...assignment,
+              status: "Completed" as const,
+              endDate: formData.startDate, // End on the day the new assignment starts
+              updatedAt: now,
+            };
+          }
+          return assignment;
+        });
+
+        // Also end assignments in the member profile
+        endCurrentProfileAssignments(formData.memberId, formData.startDate);
+      }
+
       // Create new assignment
       const newAssignment: MemberAssignment = {
         id: crypto.randomUUID(),
@@ -95,7 +206,25 @@ export default function MemberAssignmentsPage() {
         createdAt: now,
         updatedAt: now,
       };
-      saveAssignments([...assignments, newAssignment]);
+      updatedAssignments.push(newAssignment);
+      saveAssignments(updatedAssignments);
+
+      // Update member's current assigned client if this is an active assignment
+      if (formData.status === "Active") {
+        const clientName =
+          clients.find((c) => c.id === formData.clientId)?.name || "";
+        memberDb.update(formData.memberId, {
+          currentAssignedClient: clientName,
+          availabilityStatus: "Assigned",
+        });
+
+        // Also update the member profile with the assignment
+        updateMemberProfileAssignment(formData, clientName, false);
+
+        // Refresh members data
+        setMembers(memberDb.getAll());
+      }
+
       toast({
         title: "Assignment created",
         description: "The new assignment has been created successfully.",
@@ -122,10 +251,22 @@ export default function MemberAssignmentsPage() {
 
   const handleDelete = (assignmentId: string) => {
     if (window.confirm("Are you sure you want to delete this assignment?")) {
+      const assignmentToDelete = assignments.find((a) => a.id === assignmentId);
       const updatedAssignments = assignments.filter(
         (assignment) => assignment.id !== assignmentId
       );
       saveAssignments(updatedAssignments);
+
+      // If deleting an active assignment, update member status
+      if (assignmentToDelete?.status === "Active") {
+        memberDb.update(assignmentToDelete.memberId, {
+          currentAssignedClient: "Available",
+          availabilityStatus: "Available",
+        });
+        // Refresh members data
+        setMembers(memberDb.getAll());
+      }
+
       toast({
         title: "Assignment deleted",
         description: "The assignment has been deleted successfully.",
@@ -166,6 +307,85 @@ export default function MemberAssignmentsPage() {
       members.find((member) => member.id === memberId)?.fullName ||
       "Unknown Member"
     );
+  };
+
+  const endCurrentProfileAssignments = (memberId: string, endDate: string) => {
+    try {
+      const profile = memberProfileDb.getByMemberId(memberId);
+      if (profile) {
+        const updatedAssignments = profile.assignments.map((assignment) => {
+          // End any assignment that doesn't have an endDate (current assignment)
+          if (!assignment.endDate || assignment.endDate === "") {
+            return {
+              ...assignment,
+              endDate: endDate,
+            };
+          }
+          return assignment;
+        });
+
+        memberProfileDb.update(profile.id, {
+          assignments: updatedAssignments,
+        });
+      }
+    } catch (error) {
+      console.error("Error ending current profile assignments:", error);
+    }
+  };
+
+  const updateMemberProfileAssignment = (
+    assignmentData: typeof formData,
+    clientName: string,
+    isUpdate: boolean
+  ) => {
+    try {
+      const profile = memberProfileDb.getByMemberId(assignmentData.memberId);
+      if (profile) {
+        const newProfileAssignment: Assignment = {
+          id: crypto.randomUUID(),
+          clientName: clientName,
+          projectName: `${clientName} Project`, // Default project name
+          role: assignmentData.role || "Team Member",
+          startDate: assignmentData.startDate,
+          endDate: assignmentData.endDate || undefined,
+          description:
+            assignmentData.notes ||
+            `Working on ${clientName} project as ${
+              assignmentData.role || "Team Member"
+            }. ${
+              assignmentData.status === "Active"
+                ? "Currently active assignment."
+                : "Assignment completed."
+            }`,
+          technologies: [], // Empty array as we don't have this data in simple assignments
+        };
+
+        const updatedAssignments = [...profile.assignments];
+
+        if (isUpdate && editingAssignment) {
+          // Update existing assignment in profile
+          const existingIndex = updatedAssignments.findIndex(
+            (a) =>
+              a.clientName === clientName &&
+              a.startDate === assignmentData.startDate
+          );
+          if (existingIndex >= 0) {
+            updatedAssignments[existingIndex] = newProfileAssignment;
+          } else {
+            updatedAssignments.push(newProfileAssignment);
+          }
+        } else {
+          // Add new assignment to profile
+          updatedAssignments.push(newProfileAssignment);
+        }
+
+        memberProfileDb.update(profile.id, {
+          assignments: updatedAssignments,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating profile assignment:", error);
+    }
   };
 
   return (

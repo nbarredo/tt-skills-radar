@@ -335,14 +335,21 @@ export function Members() {
                 <label htmlFor="location" className="text-sm font-medium">
                   Location
                 </label>
-                <Input
-                  id="location"
-                  placeholder="New York, NY"
+                <Select
                   value={formData.location}
-                  onChange={(e) =>
-                    setFormData({ ...formData, location: e.target.value })
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, location: value })
                   }
-                />
+                >
+                  <SelectTrigger id="location">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Argentina">Argentina</SelectItem>
+                    <SelectItem value="Uruguay">Uruguay</SelectItem>
+                    <SelectItem value="Colombia">Colombia</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <label htmlFor="category" className="text-sm font-medium">

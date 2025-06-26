@@ -22,7 +22,6 @@ import {
   Target,
   MessageSquare,
   ExternalLink,
-  Edit,
   ArrowLeft,
   Users,
   Code,
@@ -35,7 +34,9 @@ import {
   skillDb,
   scaleDb,
   initDatabase,
+  loadExcelData,
 } from "@/lib/database";
+import { MemberProfileEditor } from "@/components/member-profile-editor";
 import type { Member, MemberProfile, MemberSkill, Skill, Scale } from "@/types";
 
 export function MemberProfilePage() {
@@ -52,15 +53,55 @@ export function MemberProfilePage() {
     loadMemberData();
   }, [id]);
 
-  const loadMemberData = () => {
+  const loadMemberData = async () => {
     if (!id) return;
 
     try {
+      // Ensure we load fresh data from the database
+      await loadExcelData();
+
       const memberData = memberDb.getById(id);
-      const profileData = memberProfileDb.getByMemberId(id);
+      let profileData = memberProfileDb.getByMemberId(id);
       const skillsData = memberSkillDb.getByMemberId(id);
       const allSkills = skillDb.getAll();
       const allScales = scaleDb.getAll();
+
+      console.log("=== Loading member profile for ID:", id, "===");
+      console.log("Member data:", memberData);
+      console.log("Profile data:", profileData);
+
+      // If no profile exists, create a basic one
+      if (memberData && !profileData) {
+        const newProfile: MemberProfile = {
+          id: crypto.randomUUID(),
+          memberId: id,
+          assignments: [],
+          rolesAndTasks: [],
+          appreciationsFromClients: [],
+          feedbackComments: [],
+          periodsInTalentPool: [],
+          aboutMe: "",
+          bio: "",
+          contactInfo: {
+            email: memberData.corporateEmail,
+          },
+          socialConnections: {},
+          status: "Active",
+          badges: [],
+          certifications: [],
+          assessments: [],
+          careerInterests: [],
+          professionalGoals: [],
+        };
+        memberProfileDb.add(newProfile);
+        profileData = newProfile;
+        console.log("✓ Created new profile for member:", memberData.fullName);
+      }
+
+      console.log("Profile assignments:", profileData?.assignments);
+      console.log("Profile aboutMe:", profileData?.aboutMe);
+      console.log("Profile bio:", profileData?.bio);
+      console.log("=== End member profile loading ===");
 
       setMember(memberData || null);
       setProfile(profileData || null);
@@ -146,10 +187,12 @@ export function MemberProfilePage() {
             <p className="text-muted-foreground">{member.corporateEmail}</p>
           </div>
         </div>
-        <Button>
-          <Edit className="h-4 w-4 mr-2" />
-          Edit Profile
-        </Button>
+        {profile && (
+          <MemberProfileEditor
+            profile={profile}
+            onProfileUpdated={loadMemberData}
+          />
+        )}
       </div>
 
       {/* Member Overview Card */}
@@ -525,8 +568,10 @@ export function MemberProfilePage() {
                               {cert.issuer}
                             </p>
                             <div className="text-sm">
-                              <div>License: {cert.license}</div>
-                              <div>Issued: {cert.date}</div>
+                              {cert.credentialId && (
+                                <div>Credential ID: {cert.credentialId}</div>
+                              )}
+                              <div>Issued: {cert.dateObtained}</div>
                               {cert.expiryDate && (
                                 <div>Expires: {cert.expiryDate}</div>
                               )}
@@ -650,6 +695,16 @@ export function MemberProfilePage() {
                           className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
                         >
                           LinkedIn <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                      {profile.socialConnections.github && (
+                        <a
+                          href={profile.socialConnections.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                        >
+                          GitHub <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
                       {profile.socialConnections.twitter && (

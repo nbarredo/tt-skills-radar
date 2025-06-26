@@ -143,9 +143,17 @@ function updateItem<T extends { id: string }>(
   const database = getDatabase();
   const items = database.data[collection] as unknown as T[];
   const index = items.findIndex((item) => item.id === id);
+  console.log(`Updating ${collection} with id ${id}:`, updates);
+  console.log(`Found item at index: ${index}`);
   if (index !== -1) {
+    const oldItem = items[index];
     items[index] = { ...items[index], ...updates };
+    console.log(`Updated item from:`, oldItem);
+    console.log(`Updated item to:`, items[index]);
     database.write();
+    console.log(`Successfully updated ${collection} with id ${id}`);
+  } else {
+    console.log(`Item with id ${id} not found in ${collection}`);
   }
 }
 
@@ -326,6 +334,21 @@ export const dbUtils = {
     Object.assign(database.data, defaultData);
     database.write();
     console.log("Database reset to defaults");
+  },
+  forceReload: async () => {
+    // Clear localStorage cache if it exists
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tt-skills-radar-db");
+      console.log("Cleared localStorage cache");
+    }
+
+    // Reset and reload from JSON file
+    const database = getDatabase();
+    Object.assign(database.data, defaultData);
+
+    // Force reload from Excel data
+    await loadExcelData();
+    console.log("Force reloaded database from JSON file");
   },
   getStats: () => {
     const database = getDatabase();

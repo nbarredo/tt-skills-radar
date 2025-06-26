@@ -11,6 +11,8 @@ import {
   Menu,
   Building2,
   Calendar,
+  Bot,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -25,6 +27,8 @@ const navigation = [
   { name: "Members", href: "/members", icon: Users },
   { name: "Clients", href: "/clients", icon: Building2 },
   { name: "Assignments", href: "/member-assignments", icon: Calendar },
+  { name: "Data Import", href: "/imports", icon: Upload },
+  { name: "AI Assistant", href: "/chatbot", icon: Bot },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

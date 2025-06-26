@@ -17,11 +17,11 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExcelImport } from "@/components/excel-import";
-import { EntityImport } from "@/components/entity-import";
 import { DataLoader } from "@/components/data-loader";
 import { ClientHistoryQuery } from "@/components/client-history-query";
 import { SkillsByCategoryQuery } from "@/components/skills-by-category-query";
+import { SimpleBarChart } from "@/components/charts/simple-bar-chart";
+import { SimplePieChart } from "@/components/charts/simple-pie-chart";
 
 import {
   Users,
@@ -65,18 +65,50 @@ export function Dashboard() {
     const initializeData = async () => {
       initDatabase();
 
-      // Load Excel data if not already initialized
-      if (!dbUtils.isInitialized()) {
+      // Force reload data from file to ensure we have the latest
+      try {
+        await dbUtils.forceReload();
+        console.log("Successfully force reloaded all data");
+      } catch (error) {
+        console.error("Failed to force reload data:", error);
+        // Fallback to regular load
         try {
           await loadExcelData();
-          console.log("Excel data loaded successfully");
-        } catch (error) {
-          console.error("Failed to load Excel data:", error);
+          console.log("Fallback: Excel data loaded successfully");
+        } catch (fallbackError) {
+          console.error("Failed to load Excel data:", fallbackError);
         }
       }
 
       // Load data into state
-      setMembers(memberDb.getAll());
+      const memberData = memberDb.getAll();
+      console.log("=== DASHBOARD DATA CHECK ===");
+      console.log("Total members loaded:", memberData.length);
+      console.log("Sample member locations:");
+      memberData
+        .slice(0, 5)
+        .forEach((m) =>
+          console.log(
+            `${m.fullName}: ${m.location} (${m.availabilityStatus}) - ${m.currentAssignedClient}`
+          )
+        );
+
+      // Location distribution
+      const locations: Record<string, number> = {};
+      memberData.forEach((m) => {
+        locations[m.location] = (locations[m.location] || 0) + 1;
+      });
+      console.log("Location distribution:", locations);
+
+      // Availability distribution
+      const availability: Record<string, number> = {};
+      memberData.forEach((m) => {
+        availability[m.availabilityStatus] =
+          (availability[m.availabilityStatus] || 0) + 1;
+      });
+      console.log("Availability distribution:", availability);
+
+      setMembers(memberData);
       setSkills(skillDb.getAll());
       setKnowledgeAreas(knowledgeAreaDb.getAll());
       setSkillCategories(skillCategoryDb.getAll());
@@ -186,14 +218,43 @@ export function Dashboard() {
     setIsDataLoaded(true);
   };
 
+  const handleRefreshData = async () => {
+    console.log("Manual refresh triggered");
+    try {
+      await dbUtils.forceReload();
+      console.log("Successfully refreshed all data");
+
+      // Reload state
+      const memberData = memberDb.getAll();
+      console.log("=== MANUAL REFRESH DATA CHECK ===");
+      console.log("Total members reloaded:", memberData.length);
+
+      setMembers(memberData);
+      setSkills(skillDb.getAll());
+      setKnowledgeAreas(knowledgeAreaDb.getAll());
+      setSkillCategories(skillCategoryDb.getAll());
+      setIsDataLoaded(true);
+    } catch (error) {
+      console.error("Failed to refresh data:", error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome to TT Skills Radar. Manage and explore techie skills and
-          expertise.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome to TT Skills Radar. Manage and explore techie skills and
+              expertise.
+            </p>
+          </div>
+          <Button onClick={handleRefreshData} variant="outline">
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Refresh Data
+          </Button>
+        </div>
       </div>
 
       {/* Data Loader */}
@@ -212,6 +273,79 @@ export function Dashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Analytics Charts */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Members by Client Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Members by Client</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimpleBarChart
+              data={uniqueClients.map((client) => ({
+                name: client === "Available" ? "Available" : client,
+                value: members.filter((m) => m.currentAssignedClient === client)
+                  .length,
+                color: client === "Available" ? "#6b7280" : undefined,
+              }))}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Members by Country Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Members by Country</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimplePieChart
+              data={[...new Set(members.map((m) => m.location))].map(
+                (location) => ({
+                  name: location,
+                  value: members.filter((m) => m.location === location).length,
+                })
+              )}
+              size={160}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Availability Status Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Availability Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimplePieChart
+              data={[
+                {
+                  name: "Available",
+                  value: members.filter(
+                    (m) => m.availabilityStatus === "Available"
+                  ).length,
+                  color: "#10b981",
+                },
+                {
+                  name: "Assigned",
+                  value: members.filter(
+                    (m) => m.availabilityStatus === "Assigned"
+                  ).length,
+                  color: "#3b82f6",
+                },
+                {
+                  name: "Available Soon",
+                  value: members.filter(
+                    (m) => m.availabilityStatus === "Available Soon"
+                  ).length,
+                  color: "#f59e0b",
+                },
+              ]}
+              size={160}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -536,25 +670,6 @@ export function Dashboard() {
                 </Link>
               ))
             )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Import Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="h-5 w-5" />
-            Import Data
-          </CardTitle>
-          <CardDescription>
-            Import members and entities from Excel files
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <ExcelImport />
-            <EntityImport />
           </div>
         </CardContent>
       </Card>

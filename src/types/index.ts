@@ -39,6 +39,7 @@ export interface Member {
 
 export interface ContactInfo {
   email: string;
+  phone?: string;
   workPhone?: string;
   cellPhone?: string;
   skype?: string;
@@ -46,6 +47,7 @@ export interface ContactInfo {
 
 export interface SocialConnections {
   linkedin?: string;
+  github?: string;
   twitter?: string;
 }
 
@@ -93,10 +95,10 @@ export interface TalentPoolPeriod {
 export interface Certification {
   id: string;
   name: string;
-  license: string;
   issuer: string;
-  date: string;
+  dateObtained: string;
   expiryDate?: string;
+  credentialId?: string;
   verificationUrl?: string;
 }
 
