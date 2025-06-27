@@ -1,23 +1,22 @@
-import { useEffect } from "react";
-import { Chatbot } from "@/components/chatbot";
-import { initDatabase, loadExcelData } from "@/lib/database";
+import { AIAssistant } from "@/components/ai-assistant";
 
 export function ChatbotPage() {
-  useEffect(() => {
-    initDatabase();
-    loadExcelData();
-  }, []);
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">AI Team Assistant</h1>
+    <div className="container mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">AI Assistant</h1>
         <p className="text-muted-foreground">
-          Get intelligent recommendations for your project team needs
+          Ask me anything about the team members, their skills, availability,
+          career development, or any insights you need.
         </p>
       </div>
 
-      <Chatbot />
+      <AIAssistant
+        contextType="GENERAL"
+        contextDescription="I'm your general AI assistant with access to all team data. Ask me about anything related to team members, skills, projects, career development, or business insights."
+        placeholder="Ask me anything about the team..."
+        className="min-h-[700px]"
+      />
     </div>
   );
 }

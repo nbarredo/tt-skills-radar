@@ -13,10 +13,16 @@ import {
   Calendar,
   Bot,
   Upload,
+  TrendingUp,
+  Trophy,
+  Target,
+  Network,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { geminiChatService } from "@/lib/gemini";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
@@ -29,11 +35,40 @@ const navigation = [
   { name: "Assignments", href: "/member-assignments", icon: Calendar },
   { name: "Data Import", href: "/imports", icon: Upload },
   { name: "AI Assistant", href: "/chatbot", icon: Bot },
+  { name: "Sales Insights", href: "/sales-insights", icon: TrendingUp },
+  { name: "Solutions Insights", href: "/solutions-insights", icon: Trophy },
+  { name: "People Insights", href: "/people-insights", icon: Target },
+  { name: "Production Insights", href: "/production-insights", icon: Network },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contextStatus, setContextStatus] = useState(
+    geminiChatService.getContextStatus()
+  );
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Update context status every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setContextStatus(geminiChatService.getContextStatus());
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleRefreshContext = async () => {
+    setRefreshing(true);
+    try {
+      await geminiChatService.refreshContext();
+      setContextStatus(geminiChatService.getContextStatus());
+    } catch (error) {
+      console.error("Error refreshing context:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -73,6 +108,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="flex-shrink-0 flex border-t border-border p-4">
+            {/* AI Context Status */}
+            {contextStatus.hasContext && (
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>AI Context Active</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefreshContext}
+                  disabled={refreshing}
+                  className="h-6 px-2"
+                >
+                  <RefreshCw
+                    className={cn("h-3 w-3", refreshing && "animate-spin")}
+                  />
+                </Button>
+              </div>
+            )}
             <ModeToggle />
           </div>
         </div>
@@ -83,6 +138,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between border-b bg-card px-4 py-2">
           <h1 className="text-lg font-bold">TT Skills Radar</h1>
           <div className="flex items-center gap-2">
+            {/* AI Context Status */}
+            {contextStatus.hasContext && (
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>AI Context Active</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefreshContext}
+                  disabled={refreshing}
+                  className="h-6 px-2"
+                >
+                  <RefreshCw
+                    className={cn("h-3 w-3", refreshing && "animate-spin")}
+                  />
+                </Button>
+              </div>
+            )}
             <ModeToggle />
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>

@@ -145,155 +145,194 @@ export function Chatbot() {
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="space-y-6">
         {/* Chat Interface */}
-        <div className="lg:col-span-2">
-          <Card className="h-[600px] flex flex-col">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <MessageCircle className="h-5 w-5" />
-                Chat
-              </CardTitle>
-            </CardHeader>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
+            <Card className="h-[600px] flex flex-col">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <MessageCircle className="h-5 w-5" />
+                  Chat
+                </CardTitle>
+              </CardHeader>
 
-            <CardContent className="flex-1 flex flex-col p-4">
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-3 ${
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    {message.role === "assistant" && (
-                      <Avatar className="h-8 w-8">
+              <CardContent className="flex-1 flex flex-col p-4">
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto space-y-4 mb-4 scroll-smooth">
+                  {messages.map((message, index) => (
+                    <div
+                      key={message.id}
+                      className={`flex gap-3 ${
+                        message.role === "user"
+                          ? "justify-end"
+                          : "justify-start"
+                      } animate-in slide-in-from-bottom-2 fade-in duration-500`}
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      {message.role === "assistant" && (
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            <Bot className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+
+                      <div
+                        className={`max-w-[85%] rounded-lg p-3 transition-all duration-300 ${
+                          message.role === "user"
+                            ? "bg-primary text-primary-foreground ml-auto"
+                            : "bg-muted hover:bg-muted/80"
+                        }`}
+                      >
+                        <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                          {message.content}
+                        </div>
+                        <div className="text-xs opacity-70 mt-2">
+                          {formatTime(message.timestamp)}
+                        </div>
+                      </div>
+
+                      {message.role === "user" && (
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarFallback className="bg-secondary">
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  ))}
+
+                  {isLoading && (
+                    <div className="flex gap-3 justify-start animate-in slide-in-from-bottom-2 fade-in duration-300">
+                      <Avatar className="h-8 w-8 flex-shrink-0">
                         <AvatarFallback className="bg-primary text-primary-foreground">
                           <Bot className="h-4 w-4" />
                         </AvatarFallback>
                       </Avatar>
-                    )}
-
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        message.role === "user"
-                          ? "bg-primary text-primary-foreground ml-auto"
-                          : "bg-muted"
-                      }`}
-                    >
-                      <div className="whitespace-pre-wrap text-sm">
-                        {message.content}
-                      </div>
-                      <div className="text-xs opacity-70 mt-1">
-                        {formatTime(message.timestamp)}
+                      <div className="bg-muted rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm">Thinking...</span>
+                        </div>
                       </div>
                     </div>
+                  )}
 
-                    {message.role === "user" && (
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-secondary">
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="flex gap-2 pt-2 border-t">
+                  <Input
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Ask about team members..."
+                    disabled={isLoading}
+                    className="flex-1 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={isLoading || !inputMessage.trim()}
+                    size="icon"
+                    className="transition-all duration-200 hover:scale-105"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Example Questions Sidebar */}
+          <div>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Example Questions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {exampleQuestions.map((question, index) => (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-left justify-start h-auto p-2 text-[10px] leading-tight transition-all duration-200 hover:bg-accent hover:scale-[1.01] whitespace-normal"
+                    onClick={() => setInputMessage(question)}
+                    disabled={isLoading}
+                  >
+                    "{question}"
+                  </Button>
                 ))}
-
-                {isLoading && (
-                  <div className="flex gap-3 justify-start">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        <Bot className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="bg-muted rounded-lg p-3">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-sm">Thinking...</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input */}
-              <div className="flex gap-2">
-                <Input
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Ask about team members..."
-                  disabled={isLoading}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={isLoading || !inputMessage.trim()}
-                  size="icon"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Suggestions */}
-          {suggestions.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Users className="h-5 w-5" />
-                  Top Matches
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {suggestions.map((suggestion) => (
+        {/* Top Matches Section - Full Width Below Chat */}
+        {suggestions.length > 0 && (
+          <Card className="animate-in slide-in-from-bottom duration-500">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Users className="h-6 w-6" />
+                Top Matches ({suggestions.length})
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Best team member recommendations based on your requirements
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {suggestions.map((suggestion, index) => (
                   <div
                     key={suggestion.member.id}
-                    className="p-3 border rounded-lg"
+                    className="p-4 border rounded-lg transition-all duration-300 hover:shadow-lg hover:border-primary/30 hover:scale-[1.02] animate-in slide-in-from-bottom fade-in bg-card"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className="flex items-start gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={suggestion.member.photoUrl} />
-                        <AvatarFallback>
-                          {getInitials(suggestion.member.fullName)}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-sm">
+                    <div className="space-y-3">
+                      {/* Header with Avatar and Match Score */}
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12 flex-shrink-0">
+                          <AvatarImage src={suggestion.member.photoUrl} />
+                          <AvatarFallback className="text-sm font-medium">
+                            {getInitials(suggestion.member.fullName)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-base truncate">
                             {suggestion.member.fullName}
                           </h4>
                           <Badge variant="secondary" className="text-xs">
                             {suggestion.matchScore}% match
                           </Badge>
                         </div>
+                      </div>
 
-                        <div className="space-y-1 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
+                      {/* Contact Info */}
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">
                             {suggestion.member.corporateEmail}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {suggestion.member.location}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {suggestion.availability}
-                          </div>
+                          </span>
                         </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 flex-shrink-0" />
+                          <span>{suggestion.member.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 flex-shrink-0" />
+                          <span>{suggestion.availability}</span>
+                        </div>
+                      </div>
 
-                        <p className="text-xs text-muted-foreground">
-                          {suggestion.reason}
-                        </p>
+                      {/* Reason */}
+                      <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+                        {suggestion.reason}
+                      </p>
 
+                      {/* Availability Badge */}
+                      <div className="flex justify-between items-center">
                         <Badge
                           variant={
                             suggestion.member.availabilityStatus === "Available"
@@ -307,35 +346,17 @@ export function Chatbot() {
                         >
                           {suggestion.member.availabilityStatus}
                         </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {suggestion.member.category}
+                        </Badge>
                       </div>
                     </div>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Example Questions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Example Questions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {exampleQuestions.map((question, index) => (
-                <Button
-                  key={index}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-left justify-start h-auto p-2 text-xs"
-                  onClick={() => setInputMessage(question)}
-                  disabled={isLoading}
-                >
-                  "{question}"
-                </Button>
-              ))}
+              </div>
             </CardContent>
           </Card>
-        </div>
+        )}
       </div>
     </div>
   );

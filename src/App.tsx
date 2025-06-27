@@ -14,6 +14,10 @@ import { ImportsPage } from "@/pages/imports";
 import ClientsPage from "@/pages/clients";
 import { ClientDetailPage } from "@/pages/client-detail";
 import MemberAssignmentsPage from "@/pages/member-assignments";
+import { SalesInsightsPage } from "@/pages/sales-insights";
+import { SolutionsInsightsPage } from "@/pages/solutions-insights";
+import { PeopleInsightsPage } from "@/pages/people-insights";
+import { ProductionInsightsPage } from "@/pages/production-insights";
 
 function App() {
   return (
@@ -35,6 +39,16 @@ function App() {
             <Route
               path="/member-assignments"
               element={<MemberAssignmentsPage />}
+            />
+            <Route path="/sales-insights" element={<SalesInsightsPage />} />
+            <Route
+              path="/solutions-insights"
+              element={<SolutionsInsightsPage />}
+            />
+            <Route path="/people-insights" element={<PeopleInsightsPage />} />
+            <Route
+              path="/production-insights"
+              element={<ProductionInsightsPage />}
             />
           </Routes>
         </Layout>
