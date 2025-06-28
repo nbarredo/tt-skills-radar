@@ -1231,8 +1231,8 @@ Please analyze the team data and provide specific recommendations with actual te
   }
 
   private generateCollaborationIdeas(
-    profile1: MemberProfile,
-    profile2: MemberProfile,
+    _profile1: MemberProfile,
+    _profile2: MemberProfile,
     commonSkills: string[],
     commonInterests: string[]
   ): string[] {

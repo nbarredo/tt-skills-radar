@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Network, Users, MessageCircle, MapPin, Bot, Send } from "lucide-react";
+import { Network, Users, MessageCircle, MapPin } from "lucide-react";
 import { geminiChatService, type ColleagueConnection } from "@/lib/gemini";
 import { AIAssistant } from "@/components/ai-assistant";
 
@@ -21,11 +21,6 @@ export function ProductionInsightsPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [connections, setConnections] = useState<ColleagueConnection[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  // AI Chat state
-  const [aiQuery, setAiQuery] = useState("");
-  const [aiResponse, setAiResponse] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
 
   const handleNameChange = (value: string) => {
     setMemberName(value);
@@ -85,31 +80,6 @@ export function ProductionInsightsPage() {
     if (score >= 60) return "text-blue-600";
     if (score >= 40) return "text-yellow-600";
     return "text-gray-600";
-  };
-
-  const handleAiQuery = async () => {
-    if (!aiQuery.trim()) return;
-
-    try {
-      setAiLoading(true);
-
-      // Use the new optimized method that caches team context
-      const response = await geminiChatService.getOptimizedInsightsResponse(
-        aiQuery,
-        "PRODUCTION - Analyzing team productivity, project delivery capabilities, resource allocation, workload distribution, and operational efficiency for optimal project execution"
-      );
-
-      setAiResponse(response);
-    } catch (err) {
-      console.error("Error getting AI response:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred";
-      setAiResponse(
-        `Sorry, I encountered an error: ${errorMessage}. Please try again.`
-      );
-    } finally {
-      setAiLoading(false);
-    }
   };
 
   return (

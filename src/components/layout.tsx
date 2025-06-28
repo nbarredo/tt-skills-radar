@@ -18,6 +18,7 @@ import {
   Target,
   Network,
   RefreshCw,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -39,6 +40,12 @@ const navigation = [
   { name: "Solutions Insights", href: "/solutions-insights", icon: Trophy },
   { name: "People Insights", href: "/people-insights", icon: Target },
   { name: "Production Insights", href: "/production-insights", icon: Network },
+  {
+    name: "Documentation",
+    href: "/documentation.html",
+    icon: BookOpen,
+    external: true,
+  },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -82,6 +89,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <nav className="flex-1 px-2 space-y-1">
               {navigation.map((item) => {
                 const isActive = location.pathname === item.href;
+
+                if (item.external) {
+                  return (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                        "group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
+                      )}
+                    >
+                      <item.icon
+                        className={cn(
+                          "text-muted-foreground group-hover:text-accent-foreground",
+                          "mr-3 flex-shrink-0 h-5 w-5"
+                        )}
+                      />
+                      {item.name}
+                    </a>
+                  );
+                }
+
                 return (
                   <Link
                     key={item.name}
@@ -169,6 +200,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <nav className="mt-5 space-y-1">
                   {navigation.map((item) => {
                     const isActive = location.pathname === item.href;
+
+                    if (item.external) {
+                      return (
+                        <a
+                          key={item.name}
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={cn(
+                            "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                            "group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
+                          )}
+                        >
+                          <item.icon
+                            className={cn(
+                              "text-muted-foreground group-hover:text-accent-foreground",
+                              "mr-3 flex-shrink-0 h-5 w-5"
+                            )}
+                          />
+                          {item.name}
+                        </a>
+                      );
+                    }
+
                     return (
                       <Link
                         key={item.name}

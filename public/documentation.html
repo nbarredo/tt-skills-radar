@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TT Skills Radar Documentation</title>
+    <style>
+      :root {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --primary: 210 40% 98%;
+        --primary-foreground: 222.2 84% 4.9%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --radius: 0.5rem;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        line-height: 1.6;
+      }
+
+      .documentation-layout {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        width: 280px;
+        background-color: hsl(var(--card));
+        border-right: 1px solid hsl(var(--border));
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 10;
+      }
+
+      .sidebar-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid hsl(var(--border));
+        position: sticky;
+        top: 0;
+        background-color: hsl(var(--card));
+        z-index: 11;
+      }
+
+      .sidebar-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: hsl(var(--foreground));
+      }
+
+      .sidebar-subtitle {
+        font-size: 0.875rem;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .toc {
+        padding: 1rem 0;
+      }
+
+      .toc-section {
+        margin-bottom: 1.5rem;
+      }
+
+      .toc-section-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: hsl(var(--muted-foreground));
+        padding: 0 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .toc ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .toc-item {
+        margin: 0;
+      }
+
+      .toc-link {
+        color: hsl(var(--muted-foreground));
+        text-decoration: none;
+        display: block;
+        padding: 0.5rem 1.5rem;
+        border-radius: 0;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+        border-left: 3px solid transparent;
+      }
+
+      .toc-link:hover {
+        background-color: hsl(var(--accent));
+        color: hsl(var(--accent-foreground));
+        border-left-color: hsl(var(--primary));
+      }
+
+      .toc-link.active {
+        background-color: hsl(var(--primary) / 0.1);
+        color: hsl(var(--primary));
+        border-left-color: hsl(var(--primary));
+        font-weight: 500;
+      }
+
+      .toc-sublink {
+        padding-left: 2.5rem;
+        font-size: 0.8rem;
+      }
+
+      .main-content {
+        margin-left: 280px;
+        flex: 1;
+        padding: 0;
+      }
+
+      .content-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
+        border-bottom: 1px solid hsl(var(--border));
+      }
+
+      .header h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(
+          135deg,
+          hsl(var(--primary)),
+          hsl(210 40% 80%)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .header p {
+        font-size: 1.2rem;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 9999px;
+        border: 1px solid hsl(var(--border));
+        background-color: hsl(var(--secondary));
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: hsl(var(--secondary-foreground));
+        margin-left: 0.5rem;
+      }
+
+      .section {
+        margin-bottom: 3rem;
+        background-color: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 2rem;
+      }
+
+      .section h2 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: hsl(var(--foreground));
+        display: flex;
+        align-items: center;
+      }
+
+      .section h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 2rem 0 1rem 0;
+        color: hsl(var(--foreground));
+      }
+
+      .section h4 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 1.5rem 0 0.5rem 0;
+        color: hsl(var(--foreground));
+      }
+
+      .icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-right: 0.75rem;
+        color: hsl(var(--primary));
+      }
+
+      .alert {
+        border: 1px solid;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin: 1rem 0;
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .alert-success {
+        border-color: #10b981;
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+      }
+
+      .alert-warning {
+        border-color: #f59e0b;
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+      }
+
+      .alert-info {
+        border-color: #3b82f6;
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+      }
+
+      .alert-icon {
+        width: 1rem;
+        height: 1rem;
+        margin-right: 0.75rem;
+        margin-top: 0.125rem;
+        flex-shrink: 0;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .feature-card {
+        background-color: hsl(var(--muted));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1.5rem;
+      }
+
+      .feature-card h4 {
+        margin-top: 0;
+        color: hsl(var(--foreground));
+      }
+
+      .step-list {
+        counter-reset: step-counter;
+        list-style: none;
+        padding: 0;
+      }
+
+      .step-list li {
+        counter-increment: step-counter;
+        margin: 1.5rem 0;
+        padding: 1rem;
+        background-color: hsl(var(--muted));
+        border-radius: var(--radius);
+        border-left: 4px solid hsl(var(--primary));
+        position: relative;
+      }
+
+      .step-list li::before {
+        content: counter(step-counter);
+        position: absolute;
+        left: -2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      .code-block {
+        background-color: hsl(var(--muted));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin: 1rem 0;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.875rem;
+        overflow-x: auto;
+      }
+
+      .mermaid {
+        background-color: hsl(var(--muted));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: center;
+        overflow-x: auto;
+      }
+
+      .mermaid svg {
+        max-width: 100%;
+        height: auto;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: hsl(var(--primary));
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        background-color: hsl(var(--card));
+        transition: background-color 0.2s;
+      }
+
+      .back-link:hover {
+        background-color: hsl(var(--accent));
+      }
+
+      .back-link svg {
+        width: 1rem;
+        height: 1rem;
+        margin-right: 0.5rem;
+      }
+
+      .mobile-menu-button {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 20;
+        background-color: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.5rem;
+        cursor: pointer;
+      }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9;
+      }
+
+      @media (max-width: 1024px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .sidebar-overlay.open {
+          display: block;
+        }
+
+        .main-content {
+          margin-left: 0;
+        }
+
+        .mobile-menu-button {
+          display: block;
+        }
+
+        .content-wrapper {
+          padding: 4rem 1rem 2rem 1rem;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .step-list li {
+          margin-left: 2rem;
+        }
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          primaryColor: "#bb2528",
+          primaryTextColor: "#ffffff",
+          primaryBorderColor: "#bb2528",
+          lineColor: "#ffffff",
+          secondaryColor: "#ffffff",
+          tertiaryColor: "#ffffff",
+          background: "#1a1a1a",
+          mainBkg: "#2a2a2a",
+          secondBkg: "#2a2a2a",
+        },
+      });
+    </script>
+  </head>
+  <body>
+    <div class="documentation-layout">
+      <!-- Mobile Menu Button -->
+      <button class="mobile-menu-button" id="mobileMenuButton">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+
+      <!-- Sidebar Overlay for Mobile -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- Sidebar -->
+      <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">TT Skills Radar</div>
+          <div class="sidebar-subtitle">Complete User Guide</div>
+          <a
+            href="/"
+            class="back-link"
+            style="margin-top: 1rem; display: inline-flex"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="m12 19-7-7 7-7" />
+              <path d="M19 12H5" />
+            </svg>
+            Back to Skills Radar
+          </a>
+        </div>
+
+        <div class="toc">
+          <div class="toc-section">
+            <div class="toc-section-title">Getting Started</div>
+            <ul>
+              <li class="toc-item">
+                <a href="#overview" class="toc-link">Overview</a>
+              </li>
+              <li class="toc-item">
+                <a href="#dashboard" class="toc-link">Dashboard</a>
+              </li>
+              <li class="toc-item">
+                <a href="#navigation" class="toc-link">Navigation</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="toc-section">
+            <div class="toc-section-title">Core Management</div>
+            <ul>
+              <li class="toc-item">
+                <a href="#members" class="toc-link">Members</a>
+              </li>
+              <li class="toc-item">
+                <a href="#member-profiles" class="toc-link toc-sublink"
+                  >Member Profiles</a
+                >
+              </li>
+              <li class="toc-item">
+                <a href="#skills" class="toc-link">Skills</a>
+              </li>
+              <li class="toc-item">
+                <a href="#knowledge-areas" class="toc-link toc-sublink"
+                  >Knowledge Areas</a
+                >
+              </li>
+              <li class="toc-item">
+                <a href="#skill-categories" class="toc-link toc-sublink"
+                  >Skill Categories</a
+                >
+              </li>
+              <li class="toc-item">
+                <a href="#clients" class="toc-link">Clients</a>
+              </li>
+              <li class="toc-item">
+                <a href="#assignments" class="toc-link">Assignments</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="toc-section">
+            <div class="toc-section-title">Data Management</div>
+            <ul>
+              <li class="toc-item">
+                <a href="#data-import" class="toc-link">Data Import</a>
+              </li>
+              <li class="toc-item">
+                <a href="#smart-import" class="toc-link toc-sublink"
+                  >Smart File Import</a
+                >
+              </li>
+              <li class="toc-item">
+                <a href="#excel-import" class="toc-link toc-sublink"
+                  >Excel Import</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="toc-section">
+            <div class="toc-section-title">AI Features</div>
+            <ul>
+              <li class="toc-item">
+                <a href="#ai-assistant" class="toc-link">AI Assistant</a>
+              </li>
+              <li class="toc-item">
+                <a href="#sales-insights" class="toc-link">Sales Insights</a>
+              </li>
+              <li class="toc-item">
+                <a href="#solutions-insights" class="toc-link"
+                  >Solutions Insights</a
+                >
+              </li>
+              <li class="toc-item">
+                <a href="#people-insights" class="toc-link">People Insights</a>
+              </li>
+              <li class="toc-item">
+                <a href="#production-insights" class="toc-link"
+                  >Production Insights</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="toc-section">
+            <div class="toc-section-title">Resources</div>
+            <ul>
+              <li class="toc-item">
+                <a href="#troubleshooting" class="toc-link">Troubleshooting</a>
+              </li>
+              <li class="toc-item">
+                <a href="#best-practices" class="toc-link">Best Practices</a>
+              </li>
+              <li class="toc-item"><a href="#faq" class="toc-link">FAQ</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="content-wrapper">
+          <div class="header">
+            <h1>TT Skills Radar<span class="badge">Complete Guide</span></h1>
+            <p>
+              Comprehensive documentation for managing team skills, expertise,
+              and business insights
+            </p>
+          </div>
+
+          <section id="overview" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                />
+              </svg>
+              Overview
+            </h2>
+            <p>
+              TT Skills Radar is a comprehensive platform for managing team
+              member skills, expertise, and business insights. It provides tools
+              for tracking technical competencies, managing client assignments,
+              and generating AI-powered insights for sales, solutions, people
+              management, and production planning.
+            </p>
+
+            <div class="alert alert-success">
+              <svg
+                class="alert-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M9 12l2 2 4-4" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+              <div>
+                <strong>Key Benefits:</strong> Centralized skill management,
+                AI-powered insights, automated data import, and comprehensive
+                member profiling for better resource allocation and business
+                decision-making.
+              </div>
+            </div>
+
+            <h3>System Architecture</h3>
+            <div class="mermaid">
+              graph TB subgraph "User Interface" A[Dashboard] B[Members]
+              C[Skills] D[Clients] E[Assignments] end subgraph "AI Layer"
+              F[Gemini AI] G[Sales Insights] H[Solutions Insights] I[People
+              Insights] J[Production Insights] end subgraph "Data Management"
+              K[Smart Import] L[Excel Import] M[Data Validation] N[Duplicate
+              Detection] end subgraph "Data Storage" O[Members Data] P[Skills
+              Data] Q[Clients Data] R[Assignments Data] end A --> O B --> O C
+              --> P D --> Q E --> R F --> G F --> H F --> I F --> J G --> O H
+              --> P I --> O J --> R K --> M L --> M M --> N N --> O N --> P N
+              --> Q N --> R
+            </div>
+
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>👥 Team Management</h4>
+                <p>
+                  Complete member profiles with skills, experience, and
+                  availability tracking.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>🛠️ Skills Database</h4>
+                <p>
+                  Organized skill categories, knowledge areas, and proficiency
+                  levels.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>🤖 AI Insights</h4>
+                <p>
+                  Business intelligence for sales, solutions, people, and
+                  production.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>📊 Data Import</h4>
+                <p>
+                  Smart file import with AI-powered duplicate detection and
+                  mapping.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="dashboard" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9,22 9,12 15,12 15,22" />
+              </svg>
+              Dashboard
+            </h2>
+            <p>
+              The dashboard provides an overview of your Skills Radar system
+              with key statistics and quick access to important features.
+            </p>
+
+            <h3>Key Statistics</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>📊 Member Count</h4>
+                <p>Total number of team members in the system.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🛠️ Skills Count</h4>
+                <p>Total skills tracked across all knowledge areas.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🏢 Active Clients</h4>
+                <p>Number of clients with current assignments.</p>
+              </div>
+              <div class="feature-card">
+                <h4>📈 Analytics</h4>
+                <p>Visual charts showing skill distribution and trends.</p>
+              </div>
+            </div>
+
+            <h3>Quick Actions</h3>
+            <ul>
+              <li>
+                <strong>Refresh Data:</strong> Update statistics and reload data
+                from sources
+              </li>
+              <li>
+                <strong>View Charts:</strong> Analyze skill distribution and
+                member categories
+              </li>
+              <li>
+                <strong>Recent Activity:</strong> See latest member updates and
+                assignments
+              </li>
+            </ul>
+          </section>
+
+          <section id="navigation" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 6h18" />
+                <path d="M3 12h18" />
+                <path d="M3 18h18" />
+              </svg>
+              Navigation
+            </h2>
+            <p>
+              The application uses a sidebar navigation system for easy access
+              to all features. The navigation is organized into logical groups.
+            </p>
+
+            <h3>Main Navigation Sections</h3>
+            <div class="step-list">
+              <li>
+                <strong>Core Management:</strong> Members, Skills, Knowledge
+                Areas, Skill Categories, Clients, and Assignments
+              </li>
+              <li>
+                <strong>Data Management:</strong> Import tools for Excel files
+                and smart AI-powered import
+              </li>
+              <li>
+                <strong>AI Features:</strong> Intelligent insights for Sales,
+                Solutions, People, and Production
+              </li>
+              <li>
+                <strong>Support:</strong> AI Assistant and this Documentation
+              </li>
+            </div>
+
+            <div class="alert alert-info">
+              <svg
+                class="alert-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="l 4 -7 4" />
+              </svg>
+              <div>
+                <strong>Mobile Navigation:</strong> On mobile devices, use the
+                hamburger menu (☰) in the top-left corner to access the
+                navigation.
+              </div>
+            </div>
+          </section>
+
+          <section id="members" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Members Management
+            </h2>
+            <p>
+              Manage team members, their basic information, and organizational
+              details. This is the foundation for tracking skills and
+              assignments.
+            </p>
+
+            <h3>Member Information</h3>
+            <div class="code-block">
+              <strong>Required Fields:</strong>
+              • Corporate Email (unique identifier) • Full Name • Hire Date •
+              Category (Starter, Builder, Solver, Wizard) • Location •
+              Availability Status
+
+              <strong>Optional Fields:</strong>
+              • Current Assigned Client • Additional contact information
+            </div>
+
+            <h3>Member Categories</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>🌱 Starter</h4>
+                <p>New team members learning foundational skills.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🔨 Builder</h4>
+                <p>Developing members with growing expertise.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🔧 Solver</h4>
+                <p>Experienced members handling complex challenges.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🧙 Wizard</h4>
+                <p>Expert-level members with deep specializations.</p>
+              </div>
+            </div>
+
+            <h3>Managing Members</h3>
+            <ol class="step-list">
+              <li>
+                <strong>Add New Member:</strong> Click "Add Member" button and
+                fill in required information
+              </li>
+              <li>
+                <strong>Edit Member:</strong> Click the edit icon next to any
+                member to update their information
+              </li>
+              <li>
+                <strong>View Profile:</strong> Click the eye icon to view
+                detailed member profile
+              </li>
+              <li>
+                <strong>Delete Member:</strong> Use the delete icon (this also
+                removes associated profiles and skills)
+              </li>
+            </ol>
+          </section>
+
+          <section id="member-profiles" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <polyline points="17,11 19,13 23,9" />
+              </svg>
+              Member Profiles
+            </h2>
+            <p>
+              Detailed member profiles contain comprehensive information about
+              skills, experience, assignments, and career development.
+            </p>
+
+            <h3>Profile Sections</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>📋 About & Contact</h4>
+                <p>Personal information, bio, and contact details.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🛠️ Skills</h4>
+                <p>Technical skills with proficiency levels and assessments.</p>
+              </div>
+              <div class="feature-card">
+                <h4>💼 Experience</h4>
+                <p>Work history, roles, tasks, and client assignments.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🎯 Career Development</h4>
+                <p>Goals, interests, certifications, and growth plans.</p>
+              </div>
+            </div>
+
+            <h3>Profile Management Workflow</h3>
+            <div class="mermaid">
+              graph TD A[Member Profile] --> B[Edit Profile] B --> C[Basic Info]
+              B --> D[Skills Section] B --> E[Experience] B --> F[Career Goals]
+              D --> G[Select Skills] G --> H[Set Proficiency] H --> I[Assessment
+              Date] C --> J[Save Changes] E --> J F --> J I --> J J --> K[Update
+              Database] K --> L[Profile Updated]
+            </div>
+
+            <h3>Skills Management in Profiles</h3>
+            <ul>
+              <li>
+                <strong>Add Skills:</strong> Select from available skills and
+                set proficiency levels
+              </li>
+              <li>
+                <strong>Proficiency Levels:</strong> Rate skills from 1
+                (Beginner) to 5 (Expert)
+              </li>
+              <li>
+                <strong>Last Assessed:</strong> Track when skills were last
+                evaluated
+              </li>
+              <li>
+                <strong>Skill Categories:</strong> View skills organized by
+                knowledge areas
+              </li>
+            </ul>
+
+            <div class="alert alert-success">
+              <svg
+                class="alert-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M9 12l2 2 4-4" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+              <div>
+                <strong>Profile Editing:</strong> Click the "Edit Profile"
+                button in any member profile to update their detailed
+                information.
+              </div>
+            </div>
+          </section>
+
+          <section id="skills" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                />
+              </svg>
+              Skills Management
+            </h2>
+            <p>
+              Manage the technical skills database that forms the foundation of
+              the Skills Radar system. Skills are organized by knowledge areas
+              and categories.
+            </p>
+
+            <h3>Skill Hierarchy</h3>
+            <div class="mermaid">
+              graph TD A[Knowledge Areas] --> B[Technologies] A --> C[Cloud
+              Platforms] A --> D[Data Analytics] A --> E[Business Skills] B -->
+              F[Programming Languages] B --> G[Frameworks Libraries] C -->
+              H[Infrastructure] C --> I[Services] D --> J[Analytics Tools] D -->
+              K[Data Processing] E --> L[Methodologies] E --> M[Soft Skills] F
+              --> N[React] F --> O[Python] F --> P[JavaScript] G --> Q[Node.js]
+              G --> R[Express] H --> S[EC2] H --> T[S3] I --> U[Lambda] I -->
+              V[RDS] J --> W[Tableau] J --> X[Power BI] K --> Y[Spark] K -->
+              Z[Kafka] L --> AA[Agile] L --> AB[Scrum] M --> AC[Leadership] M
+              --> AD[Communication]
+            </div>
+
+            <h3>Creating Skills</h3>
+            <ol class="step-list">
+              <li>
+                <strong>Define Knowledge Areas:</strong> Create high-level
+                categories (e.g., "Technologies", "Cloud")
+              </li>
+              <li>
+                <strong>Create Skill Categories:</strong> Add subcategories
+                within knowledge areas
+              </li>
+              <li>
+                <strong>Add Individual Skills:</strong> Create specific skills
+                with descriptions and purposes
+              </li>
+              <li>
+                <strong>Link Relationships:</strong> Associate each skill with
+                its knowledge area and category
+              </li>
+            </ol>
+
+            <h3>Skill Information</h3>
+            <ul>
+              <li>
+                <strong>Name:</strong> The skill identifier (e.g., "React",
+                "Python", "AWS")
+              </li>
+              <li>
+                <strong>Purpose:</strong> Description of what the skill is used
+                for
+              </li>
+              <li><strong>Knowledge Area:</strong> High-level grouping</li>
+              <li>
+                <strong>Category:</strong> Specific classification within the
+                knowledge area
+              </li>
+            </ul>
+          </section>
+
+          <section id="clients" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 21h18" />
+                <path d="M5 21V7l8-4v18" />
+                <path d="M19 21V11l-6-4" />
+              </svg>
+              Client Management
+            </h2>
+            <p>
+              Manage client information and track which team members are
+              assigned to different client projects.
+            </p>
+
+            <h3>Client Information</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>📋 Basic Details</h4>
+                <p>Name, industry, location, and status.</p>
+              </div>
+              <div class="feature-card">
+                <h4>📝 Description</h4>
+                <p>Detailed information about the client and their needs.</p>
+              </div>
+              <div class="feature-card">
+                <h4>👥 Assignments</h4>
+                <p>Current team members working for this client.</p>
+              </div>
+              <div class="feature-card">
+                <h4>📊 Project History</h4>
+                <p>Past assignments and team member rotations.</p>
+              </div>
+            </div>
+
+            <h3>Client Status Types</h3>
+            <ul>
+              <li>
+                <strong>Active:</strong> Currently engaged with ongoing projects
+              </li>
+              <li>
+                <strong>Inactive:</strong> Not currently active but relationship
+                maintained
+              </li>
+              <li><strong>Prospect:</strong> Potential client being pursued</li>
+              <li>
+                <strong>Former:</strong> Past client with completed engagement
+              </li>
+            </ul>
+          </section>
+
+          <section id="assignments" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              Member Assignments
+            </h2>
+            <p>
+              Track and manage member assignments to clients, including current
+              assignments, availability status, and assignment history.
+            </p>
+
+            <h3>Assignment Management</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>📅 Current Assignments</h4>
+                <p>See who is currently assigned to which clients.</p>
+              </div>
+              <div class="feature-card">
+                <h4>✅ Availability Tracking</h4>
+                <p>Monitor member availability for new assignments.</p>
+              </div>
+              <div class="feature-card">
+                <h4>📊 Assignment History</h4>
+                <p>Track past assignments and client rotations.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🔍 Resource Planning</h4>
+                <p>Plan future assignments based on skills and availability.</p>
+              </div>
+            </div>
+
+            <h3>Availability Status</h3>
+            <ul>
+              <li><strong>Available:</strong> Ready for new assignments</li>
+              <li>
+                <strong>Assigned:</strong> Currently working on client projects
+              </li>
+              <li>
+                <strong>Partially Available:</strong> Can take on additional
+                work
+              </li>
+              <li>
+                <strong>Unavailable:</strong> Not available for assignments
+                (vacation, training, etc.)
+              </li>
+            </ul>
+          </section>
+
+          <section id="data-import" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7,10 12,15 17,10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Data Import
+            </h2>
+            <p>
+              Import data from various sources including Excel files and other
+              formats. The system provides multiple import options for different
+              use cases.
+            </p>
+
+            <h3>Import Options</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>🤖 Smart File Import</h4>
+                <p>
+                  AI-powered import with automatic duplicate detection and field
+                  mapping.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>📊 Excel Import</h4>
+                <p>Traditional Excel file import for member skills and data.</p>
+              </div>
+              <div class="feature-card">
+                <h4>⚙️ Entity Management</h4>
+                <p>Manage foundational data structures and configurations.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🔄 Data Management</h4>
+                <p>Refresh and synchronize data from external sources.</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="smart-import" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              Smart File Import (AI-Powered)
+            </h2>
+            <p>
+              The Smart File Import feature uses advanced AI to intelligently
+              analyze, map, and import data with automatic duplicate detection.
+            </p>
+
+            <h3>Import Process</h3>
+            <div class="mermaid">
+              flowchart TD A[Upload File] --> B[AI Analysis] B --> C[Entity
+              Detection] C --> D[Field Mapping] D --> E[Confidence Scoring] E
+              --> F[Duplicate Detection] F --> G[Data Preview] G --> H[Record
+              Confirmation] H --> I[Import Execution] I --> J[Success Report]
+            </div>
+
+            <ol class="step-list">
+              <li>
+                <strong>Upload File:</strong> Select JSON, CSV, Excel, or text
+                files
+              </li>
+              <li>
+                <strong>AI Analysis:</strong> System analyzes structure and
+                detects entity types
+              </li>
+              <li>
+                <strong>Field Mapping:</strong> Review AI-suggested field
+                mappings
+              </li>
+              <li>
+                <strong>Duplicate Detection:</strong> AI identifies existing
+                records to prevent duplicates
+              </li>
+              <li>
+                <strong>Record Confirmation:</strong> Select which records to
+                import
+              </li>
+              <li>
+                <strong>Import Execution:</strong> Complete the import process
+              </li>
+            </ol>
+
+            <h3>Supported Formats</h3>
+            <ul>
+              <li>
+                <strong>JSON:</strong> Structured data with nested objects and
+                arrays
+              </li>
+              <li><strong>CSV:</strong> Comma-separated values with headers</li>
+              <li><strong>Excel:</strong> Spreadsheet files (.xlsx, .xls)</li>
+              <li>
+                <strong>Text:</strong> Structured text formats with delimiters
+              </li>
+            </ul>
+
+            <div class="alert alert-success">
+              <svg
+                class="alert-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M9 12l2 2 4-4" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+              <div>
+                <strong>AI Intelligence:</strong> The system automatically
+                detects duplicates, suggests optimal field mappings, and
+                provides confidence scores for all suggestions.
+              </div>
+            </div>
+          </section>
+
+          <section id="ai-assistant" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 8V4H8" />
+                <rect width="16" height="12" x="4" y="8" rx="2" />
+                <path d="M2 14h2" />
+                <path d="M20 14h2" />
+                <path d="M15 13v2" />
+                <path d="M9 13v2" />
+              </svg>
+              AI Assistant
+            </h2>
+            <p>
+              The AI Assistant provides intelligent insights and answers about
+              your team members, skills, availability, and business questions.
+            </p>
+
+            <h3>AI Capabilities</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>🔍 Team Queries</h4>
+                <p>
+                  Ask about specific team members, their skills, and
+                  availability.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>📊 Skill Analysis</h4>
+                <p>
+                  Get insights about skill distribution and gaps in your team.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>💼 Business Insights</h4>
+                <p>
+                  Receive recommendations for resource allocation and planning.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>🎯 Career Development</h4>
+                <p>
+                  Get suggestions for team member growth and development paths.
+                </p>
+              </div>
+            </div>
+
+            <h3>AI Insights Workflow</h3>
+            <div class="mermaid">
+              graph LR A[User Query] --> B[Context Manager] B --> C[Team Data] C
+              --> D[Gemini AI] D --> E[Business Context] E --> F[Intelligent
+              Response] subgraph "Context Optimization" G[Session Cache] H[Auto
+              Refresh] I[Usage Tracking] end B --> G G --> H H --> B B --> I
+            </div>
+
+            <h3>Context-Aware Intelligence</h3>
+            <p>
+              The AI Assistant maintains context about your team data and
+              provides specific, actionable insights rather than generic
+              responses. It can reference actual team member names, skill
+              levels, and current assignments.
+            </p>
+
+            <div class="alert alert-info">
+              <svg
+                class="alert-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="l 4 -7 4" />
+              </svg>
+              <div>
+                <strong>Global Context:</strong> The AI Assistant loads team
+                context once and reuses it efficiently across all conversations,
+                reducing costs and improving response times.
+              </div>
+            </div>
+          </section>
+
+          <section id="sales-insights" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 3v18h18" />
+                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+              </svg>
+              Sales Insights
+            </h2>
+            <p>
+              AI-powered insights for sales teams to understand skill
+              availability and team strengths for client opportunities.
+            </p>
+
+            <h3>Sales Features</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>🔍 Skill Availability</h4>
+                <p>
+                  Find team members with specific skills who are available for
+                  projects.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>💪 Knowledge Strengths</h4>
+                <p>
+                  Identify areas where your team has the strongest expertise.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>🤖 AI Recommendations</h4>
+                <p>
+                  Get AI-powered suggestions for team composition and client
+                  matching.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>📊 Team Analytics</h4>
+                <p>
+                  Visual analysis of skill distribution and availability trends.
+                </p>
+              </div>
+            </div>
+
+            <h3>Use Cases</h3>
+            <ul>
+              <li>
+                <strong>Client Proposals:</strong> Quickly identify available
+                team members with required skills
+              </li>
+              <li>
+                <strong>Capability Statements:</strong> Understand team
+                strengths for different technology stacks
+              </li>
+              <li>
+                <strong>Resource Planning:</strong> Plan team allocation for
+                upcoming opportunities
+              </li>
+              <li>
+                <strong>Competitive Analysis:</strong> Assess team capabilities
+                against market demands
+              </li>
+            </ul>
+          </section>
+
+          <section id="solutions-insights" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 01-8 0" />
+              </svg>
+              Solutions Insights
+            </h2>
+            <p>
+              Technical insights for solution architects and project managers to
+              identify experts and skill gaps.
+            </p>
+
+            <h3>Solutions Features</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>🏆 Knowledge Experts</h4>
+                <p>
+                  Identify top experts in each knowledge area and technology.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>📊 Gap Analysis</h4>
+                <p>Discover skill gaps and areas needing development.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🎯 Technical Matching</h4>
+                <p>Match technical requirements with available expertise.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🔧 Architecture Planning</h4>
+                <p>Plan technical solutions based on team capabilities.</p>
+              </div>
+            </div>
+
+            <h3>Expert Identification</h3>
+            <p>
+              The system identifies experts based on skill proficiency levels,
+              experience, and specialization areas. This helps in structuring
+              professional development programs and technical mentorship.
+            </p>
+          </section>
+
+          <section id="people-insights" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 00-3-3.87" />
+                <path d="M16 3.13a4 4 0 010 7.75" />
+              </svg>
+              People Insights
+            </h2>
+            <p>
+              HR and people management insights for career development,
+              mentorship, and team growth planning.
+            </p>
+
+            <h3>People Features</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>🎯 Career Development</h4>
+                <p>
+                  Track career progression and identify development
+                  opportunities.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>👥 Mentorship Matching</h4>
+                <p>Connect junior members with appropriate mentors.</p>
+              </div>
+              <div class="feature-card">
+                <h4>📈 Skill Growth</h4>
+                <p>Monitor skill development and progression over time.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🏆 Recognition</h4>
+                <p>Identify achievements and areas for recognition.</p>
+              </div>
+            </div>
+
+            <h3>Career Development Tools</h3>
+            <ul>
+              <li>
+                <strong>Skill Gap Analysis:</strong> Identify skills needed for
+                career advancement
+              </li>
+              <li>
+                <strong>Learning Paths:</strong> Suggest development paths based
+                on career goals
+              </li>
+              <li>
+                <strong>Mentorship Programs:</strong> Match mentors and mentees
+                based on skills and experience
+              </li>
+              <li>
+                <strong>Performance Tracking:</strong> Monitor skill development
+                and career progression
+              </li>
+            </ul>
+          </section>
+
+          <section id="production-insights" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+              Production Insights
+            </h2>
+            <p>
+              Operational insights for production managers and team leads to
+              optimize resource allocation and project delivery.
+            </p>
+
+            <h3>Production Features</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>⚡ Resource Optimization</h4>
+                <p>Optimize team allocation across projects and clients.</p>
+              </div>
+              <div class="feature-card">
+                <h4>📊 Productivity Analytics</h4>
+                <p>Analyze team productivity and utilization metrics.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🎯 Project Matching</h4>
+                <p>Match projects with optimal team compositions.</p>
+              </div>
+              <div class="feature-card">
+                <h4>⚠️ Risk Assessment</h4>
+                <p>Identify potential resource conflicts and bottlenecks.</p>
+              </div>
+            </div>
+
+            <h3>Operational Excellence</h3>
+            <ul>
+              <li>
+                <strong>Capacity Planning:</strong> Plan team capacity and
+                resource allocation
+              </li>
+              <li>
+                <strong>Skill Utilization:</strong> Ensure optimal use of team
+                skills and expertise
+              </li>
+              <li>
+                <strong>Project Delivery:</strong> Match team capabilities with
+                project requirements
+              </li>
+              <li>
+                <strong>Risk Management:</strong> Identify and mitigate
+                resource-related risks
+              </li>
+            </ul>
+          </section>
+
+          <section id="troubleshooting" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              Troubleshooting
+            </h2>
+            <p>
+              Common issues and solutions for using the Skills Radar system
+              effectively.
+            </p>
+
+            <h3>Common Issues</h3>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <h4>❌ Data Import Failures</h4>
+                <p>
+                  Issues with file formats, data validation, or import
+                  processes.
+                </p>
+              </div>
+              <div class="feature-card">
+                <h4>🔍 Missing Data</h4>
+                <p>Data not appearing or synchronization issues.</p>
+              </div>
+              <div class="feature-card">
+                <h4>🤖 AI Assistant Issues</h4>
+                <p>AI responses not working or context problems.</p>
+              </div>
+              <div class="feature-card">
+                <h4>👥 Profile Problems</h4>
+                <p>Issues with member profiles or skill assignments.</p>
+              </div>
+            </div>
+
+            <h3>Quick Solutions</h3>
+            <ul>
+              <li>
+                <strong>Refresh Data:</strong> Use the "Refresh Data" button on
+                the dashboard
+              </li>
+              <li>
+                <strong>Check File Format:</strong> Ensure import files have
+                proper headers and structure
+              </li>
+              <li>
+                <strong>Clear Browser Cache:</strong> Clear cache and cookies if
+                experiencing display issues
+              </li>
+              <li>
+                <strong>AI Context:</strong> Use the refresh button next to AI
+                context status if AI responses seem outdated
+              </li>
+            </ul>
+          </section>
+
+          <section id="best-practices" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                />
+              </svg>
+              Best Practices
+            </h2>
+            <p>
+              Recommended practices for getting the most value from your Skills
+              Radar system.
+            </p>
+
+            <h3>Data Management</h3>
+            <ul>
+              <li>
+                <strong>Regular Updates:</strong> Keep member profiles and
+                skills current
+              </li>
+              <li>
+                <strong>Consistent Naming:</strong> Use standardized names for
+                skills and categories
+              </li>
+              <li>
+                <strong>Data Validation:</strong> Regularly review and validate
+                imported data
+              </li>
+              <li>
+                <strong>Backup Strategy:</strong> Export data regularly for
+                backup purposes
+              </li>
+            </ul>
+
+            <h3>Skill Tracking</h3>
+            <ul>
+              <li>
+                <strong>Proficiency Levels:</strong> Use consistent criteria for
+                skill level assessments
+              </li>
+              <li>
+                <strong>Regular Assessments:</strong> Update skill assessments
+                periodically
+              </li>
+              <li>
+                <strong>Skill Categories:</strong> Organize skills into logical,
+                searchable categories
+              </li>
+              <li>
+                <strong>Documentation:</strong> Document skill definitions and
+                assessment criteria
+              </li>
+            </ul>
+
+            <h3>Team Management</h3>
+            <ul>
+              <li>
+                <strong>Profile Completeness:</strong> Encourage complete and
+                detailed member profiles
+              </li>
+              <li>
+                <strong>Career Goals:</strong> Track and update career
+                development goals
+              </li>
+              <li>
+                <strong>Assignment History:</strong> Maintain accurate
+                assignment and project history
+              </li>
+              <li>
+                <strong>Availability Status:</strong> Keep availability status
+                current and accurate
+              </li>
+            </ul>
+          </section>
+
+          <section id="faq" class="section">
+            <h2>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Frequently Asked Questions
+            </h2>
+            <p>
+              Common questions and answers about using the Skills Radar system.
+            </p>
+
+            <h3>General Questions</h3>
+            <div class="feature-card">
+              <h4>Q: How do I add a new team member?</h4>
+              <p>
+                A: Go to the Members page and click "Add Member". Fill in the
+                required information including email, name, hire date, category,
+                location, and availability status.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h4>Q: How do I import data from Excel?</h4>
+              <p>
+                A: Use either the Smart File Import (AI-powered) or Excel Import
+                options on the Data Import page. The Smart Import provides
+                better duplicate detection and field mapping.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h4>Q: How does the AI Assistant work?</h4>
+              <p>
+                A: The AI Assistant has access to your team data and can answer
+                questions about skills, availability, assignments, and provide
+                business insights. It maintains context across conversations.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h4>
+                Q: What's the difference between Knowledge Areas and Skill
+                Categories?
+              </h4>
+              <p>
+                A: Knowledge Areas are high-level groupings (e.g.,
+                "Technologies", "Cloud"), while Skill Categories are more
+                specific classifications within those areas (e.g., "Programming
+                Languages", "Frameworks").
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h4>Q: How do I update skill proficiency levels?</h4>
+              <p>
+                A: Go to a member's profile, click "Edit Profile", navigate to
+                the Skills tab, and update the proficiency levels (1-5 scale)
+                for their skills.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <h4>Q: Can I export data from the system?</h4>
+              <p>
+                A: Yes, you can export data through the dashboard's "Refresh
+                Data" feature or use the data management tools on the Import
+                page.
+              </p>
+            </div>
+          </section>
+
+          <div
+            style="
+              text-align: center;
+              margin-top: 3rem;
+              padding: 2rem;
+              border-top: 1px solid hsl(var(--border));
+            "
+          >
+            <p style="color: hsl(var(--muted-foreground))">
+              Need additional help? Contact your system administrator or use the
+              AI Assistant for specific questions about your team data.
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Mobile menu functionality
+      const mobileMenuButton = document.getElementById("mobileMenuButton");
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+      function toggleMobileMenu() {
+        sidebar.classList.toggle("open");
+        sidebarOverlay.classList.toggle("open");
+      }
+
+      mobileMenuButton.addEventListener("click", toggleMobileMenu);
+      sidebarOverlay.addEventListener("click", toggleMobileMenu);
+
+      // Active link highlighting
+      function updateActiveLink() {
+        const sections = document.querySelectorAll("section[id]");
+        const tocLinks = document.querySelectorAll(".toc-link");
+
+        let currentSection = "";
+        const scrollPosition = window.scrollY + 100;
+
+        sections.forEach((section) => {
+          const sectionTop = section.offsetTop;
+          const sectionHeight = section.offsetHeight;
+
+          if (
+            scrollPosition >= sectionTop &&
+            scrollPosition < sectionTop + sectionHeight
+          ) {
+            currentSection = section.getAttribute("id");
+          }
+        });
+
+        tocLinks.forEach((link) => {
+          link.classList.remove("active");
+          if (link.getAttribute("href") === "#" + currentSection) {
+            link.classList.add("active");
+          }
+        });
+      }
+
+      window.addEventListener("scroll", updateActiveLink);
+      window.addEventListener("load", updateActiveLink);
+
+      // Smooth scrolling for anchor links
+      document.querySelectorAll(".toc-link").forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          const targetId = this.getAttribute("href").substring(1);
+          const targetElement = document.getElementById(targetId);
+
+          if (targetElement) {
+            const offsetTop = targetElement.offsetTop - 20;
+            window.scrollTo({
+              top: offsetTop,
+              behavior: "smooth",
+            });
+          }
+
+          // Close mobile menu if open
+          if (sidebar.classList.contains("open")) {
+            toggleMobileMenu();
+          }
+        });
+      });
+
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        updateActiveLink();
+      });
+    </script>
+  </body>
+</html>

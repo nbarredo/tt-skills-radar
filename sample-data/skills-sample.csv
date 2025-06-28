@@ -1,0 +1,26 @@
+skill_name,category,knowledge_area,description,purpose
+React,Frontend Frameworks,Web Technologies,A JavaScript library for building user interfaces,Building interactive web applications
+Node.js,Backend Frameworks,Web Technologies,JavaScript runtime built on Chrome's V8 JavaScript engine,Server-side development
+Python,Programming Languages,Technologies,High-level programming language,General-purpose programming and data science
+Java,Programming Languages,Technologies,Object-oriented programming language,Enterprise application development
+TypeScript,Programming Languages,Web Technologies,Typed superset of JavaScript,Type-safe JavaScript development
+MongoDB,Databases,Data Management,NoSQL document database,Storing and managing unstructured data
+PostgreSQL,Databases,Data Management,Open source relational database,Storing and managing structured data
+AWS,Cloud Platforms,Cloud Computing,Amazon Web Services cloud platform,Cloud infrastructure and services
+Azure,Cloud Platforms,Cloud Computing,Microsoft Azure cloud platform,Cloud infrastructure and services
+Docker,DevOps Tools,DevOps,Containerization platform,Application containerization and deployment
+Kubernetes,DevOps Tools,DevOps,Container orchestration platform,Managing containerized applications at scale
+Machine Learning,AI/ML,Data Science,Algorithms that learn from data,Building intelligent systems
+TensorFlow,AI/ML Frameworks,Data Science,Open source machine learning framework,Deep learning and neural networks
+Spring Boot,Backend Frameworks,Technologies,Java-based framework,Building microservices and web applications
+Jenkins,CI/CD Tools,DevOps,Automation server for CI/CD,Continuous integration and deployment
+Git,Version Control,Development Tools,Distributed version control system,Source code management
+CSS,Frontend Technologies,Web Technologies,Cascading Style Sheets,Styling web applications
+HTML,Frontend Technologies,Web Technologies,HyperText Markup Language,Web page structure and content
+SQL,Query Languages,Data Management,Structured Query Language,Database querying and management
+Linux,Operating Systems,Infrastructure,Open source operating system,Server management and administration
+Terraform,Infrastructure as Code,DevOps,Infrastructure provisioning tool,Managing cloud infrastructure
+Apache Spark,Big Data,Data Science,Unified analytics engine,Large-scale data processing
+Bash,Scripting Languages,Development Tools,Unix shell and command language,System administration and automation
+Data Science,Methodologies,Data Science,Data analysis and modeling discipline,Extracting insights from data
+DevOps,Methodologies,DevOps,Development and operations practices,Streamlining software delivery 

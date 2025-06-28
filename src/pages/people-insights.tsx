@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, TrendingUp, Bot, Send } from "lucide-react";
+import { Users, Target, TrendingUp } from "lucide-react";
 import {
   geminiChatService,
   type CareerAlignment,
@@ -29,11 +29,6 @@ export function PeopleInsightsPage() {
     null
   );
   const [error, setError] = useState<string | null>(null);
-
-  // AI Chat state
-  const [aiQuery, setAiQuery] = useState("");
-  const [aiResponse, setAiResponse] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
 
   const handleNameChange = (value: string) => {
     setMemberName(value);
@@ -74,31 +69,6 @@ export function PeopleInsightsPage() {
       setError("Failed to analyze career data. Please check the member name.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAiQuery = async () => {
-    if (!aiQuery.trim()) return;
-
-    try {
-      setAiLoading(true);
-
-      // Use the new optimized method that caches team context
-      const response = await geminiChatService.getOptimizedInsightsResponse(
-        aiQuery,
-        "PEOPLE - Analyzing career alignment, development opportunities, colleague connections, mentorship matching, and personal growth recommendations for team members"
-      );
-
-      setAiResponse(response);
-    } catch (err) {
-      console.error("Error getting AI response:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred";
-      setAiResponse(
-        `Sorry, I encountered an error: ${errorMessage}. Please try again.`
-      );
-    } finally {
-      setAiLoading(false);
     }
   };
 

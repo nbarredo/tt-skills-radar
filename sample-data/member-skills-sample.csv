@@ -1,0 +1,29 @@
+member_email,skill_name,proficiency_level,years_experience,last_used,certification
+alice.johnson@company.com,React,4,3,2024-01-15,React Developer Certified
+alice.johnson@company.com,Node.js,4,3,2024-01-10,
+alice.johnson@company.com,TypeScript,3,2,2024-01-12,
+alice.johnson@company.com,MongoDB,3,2,2023-12-20,
+alice.johnson@company.com,AWS,2,1,2023-11-15,AWS Cloud Practitioner
+bob.smith@company.com,Java,5,8,2024-01-18,Oracle Java Certified
+bob.smith@company.com,Spring Boot,5,6,2024-01-18,
+bob.smith@company.com,Kubernetes,4,3,2024-01-16,CKA Certified
+bob.smith@company.com,Docker,4,4,2024-01-16,
+bob.smith@company.com,PostgreSQL,4,5,2024-01-14,
+bob.smith@company.com,AWS,4,4,2024-01-12,AWS Solutions Architect
+carol.davis@company.com,JavaScript,3,2,2024-01-19,
+carol.davis@company.com,React,3,1,2024-01-19,
+carol.davis@company.com,CSS,4,2,2024-01-19,
+carol.davis@company.com,HTML,4,2,2024-01-19,
+carol.davis@company.com,Git,2,1,2024-01-17,
+david.wilson@company.com,Python,5,10,2024-01-17,Python Institute Certified
+david.wilson@company.com,Machine Learning,5,8,2024-01-17,
+david.wilson@company.com,TensorFlow,4,5,2024-01-15,TensorFlow Developer
+david.wilson@company.com,Data Science,5,8,2024-01-17,
+david.wilson@company.com,SQL,4,7,2024-01-16,
+david.wilson@company.com,Apache Spark,3,3,2024-01-10,
+eva.martinez@company.com,DevOps,4,4,2024-01-18,
+eva.martinez@company.com,Terraform,4,3,2024-01-18,HashiCorp Terraform Associate
+eva.martinez@company.com,Jenkins,3,2,2024-01-16,
+eva.martinez@company.com,Linux,4,5,2024-01-18,Linux Professional Institute
+eva.martinez@company.com,Bash,3,4,2024-01-18,
+eva.martinez@company.com,Azure,3,2,2024-01-14,Azure Fundamentals 

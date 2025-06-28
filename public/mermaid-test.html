@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mermaid Test - TT Skills Radar</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          primaryColor: "#bb2528",
+          primaryTextColor: "#ffffff",
+          primaryBorderColor: "#bb2528",
+          lineColor: "#ffffff",
+          secondaryColor: "#ffffff",
+          tertiaryColor: "#ffffff",
+          background: "#1a1a1a",
+          mainBkg: "#2a2a2a",
+          secondBkg: "#2a2a2a",
+        },
+      });
+    </script>
+    <style>
+      body {
+        background-color: #1a1a1a;
+        color: white;
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .mermaid {
+        background-color: #2a2a2a;
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .test-result {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #28a745;
+      }
+      .error {
+        background-color: #dc3545;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Mermaid Diagram Test</h1>
+    <p>This page tests if Mermaid diagrams are rendering correctly.</p>
+
+    <h2>Test 1: Simple Flowchart</h2>
+    <div class="mermaid">flowchart TD A[Start] --> B[Process] B --> C[End]</div>
+
+    <h2>Test 2: System Architecture</h2>
+    <div class="mermaid">
+      graph TB subgraph "User Interface" A[Dashboard] B[Members] C[Skills] end
+      subgraph "AI Layer" D[Gemini AI] E[Insights] end A --> D B --> D C --> D D
+      --> E
+    </div>
+
+    <h2>Test 3: Skill Hierarchy</h2>
+    <div class="mermaid">
+      graph TD A[Knowledge Areas] --> B[Technologies] A --> C[Business Skills] B
+      --> D[Programming] B --> E[Frameworks] C --> F[Methodologies] C --> G[Soft
+      Skills]
+    </div>
+
+    <div class="test-result success">
+      <strong>✅ Success:</strong> If you can see the diagrams above, Mermaid is
+      working correctly!
+    </div>
+
+    <div class="test-result error">
+      <strong>❌ Error:</strong> If you see "Syntax error in text" or blank
+      spaces, there's still an issue.
+    </div>
+
+    <p>
+      <a href="/documentation.html" style="color: #bb2528"
+        >← Back to Documentation</a
+      >
+    </p>
+
+    <script>
+      // Check if Mermaid rendered successfully
+      setTimeout(() => {
+        const mermaidElements = document.querySelectorAll(".mermaid");
+        let allRendered = true;
+
+        mermaidElements.forEach((element) => {
+          if (!element.querySelector("svg")) {
+            allRendered = false;
+          }
+        });
+
+        if (allRendered) {
+          console.log("✅ All Mermaid diagrams rendered successfully!");
+        } else {
+          console.error("❌ Some Mermaid diagrams failed to render");
+        }
+      }, 2000);
+    </script>
+  </body>
+</html>

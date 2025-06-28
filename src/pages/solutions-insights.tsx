@@ -7,20 +7,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  AlertTriangle,
-  Trophy,
-  TrendingDown,
-  MapPin,
-  Bot,
-  Send,
-  Users,
-  Brain,
-} from "lucide-react";
+import { AlertTriangle, Trophy, TrendingDown, MapPin } from "lucide-react";
 import {
   geminiChatService,
   type KnowledgeAreaExpert,
@@ -33,11 +23,6 @@ export function SolutionsInsightsPage() {
   const [experts, setExperts] = useState<KnowledgeAreaExpert[]>([]);
   const [gaps, setGaps] = useState<KnowledgeAreaGap[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  // AI Chat state
-  const [aiQuery, setAiQuery] = useState("");
-  const [aiResponse, setAiResponse] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -104,31 +89,6 @@ export function SolutionsInsightsPage() {
         (expert.yearsExperience + 1)) /
         10
     );
-  };
-
-  const handleAiQuery = async () => {
-    if (!aiQuery.trim()) return;
-
-    try {
-      setAiLoading(true);
-
-      // Use the new optimized method that caches team context
-      const response = await geminiChatService.getOptimizedInsightsResponse(
-        aiQuery,
-        "SOLUTIONS - Analyzing team capabilities for technical solutions, identifying skill gaps, recommending team compositions for projects, evaluating technical expertise and innovation potential"
-      );
-
-      setAiResponse(response);
-    } catch (err) {
-      console.error("Error getting AI response:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred";
-      setAiResponse(
-        `Sorry, I encountered an error: ${errorMessage}. Please try again.`
-      );
-    } finally {
-      setAiLoading(false);
-    }
   };
 
   if (loading) {

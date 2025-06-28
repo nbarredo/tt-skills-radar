@@ -9,6 +9,7 @@ import {
 import { ExcelImport } from "@/components/excel-import";
 import { EntityImport } from "@/components/entity-import";
 import { DataLoader } from "@/components/data-loader";
+import { SmartFileImport } from "@/components/smart-file-import";
 import { initDatabase } from "@/lib/database";
 import { Upload, FileSpreadsheet, Settings, Database } from "lucide-react";
 
@@ -26,6 +27,18 @@ export function ImportsPage() {
           Import skills data from Excel files and manage system entities
         </p>
       </div>
+
+      {/* Smart AI Import */}
+      <Card>
+        <CardContent className="p-0">
+          <SmartFileImport
+            onImportComplete={(data, entity) => {
+              console.log(`Imported ${data.length} ${entity} records:`, data);
+              // Here you would integrate with your database
+            }}
+          />
+        </CardContent>
+      </Card>
 
       {/* Import Options */}
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
@@ -87,6 +100,29 @@ export function ImportsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div>
+            <h4 className="font-medium mb-2">Smart AI Import</h4>
+            <p className="text-sm text-muted-foreground mb-2">
+              Use AI-powered intelligent file import to automatically analyze
+              and map your data:
+            </p>
+            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+              <li>Supports JSON, CSV, Excel, and text files up to 10MB</li>
+              <li>
+                AI automatically analyzes file structure and suggests field
+                mappings
+              </li>
+              <li>
+                Intelligently maps to Members, Skills, Clients, or other
+                entities
+              </li>
+              <li>Preview data and review mappings before importing</li>
+              <li>
+                Handles data transformations and quality checks automatically
+              </li>
+            </ul>
+          </div>
+
           <div>
             <h4 className="font-medium mb-2">Excel Data Import</h4>
             <p className="text-sm text-muted-foreground mb-2">
