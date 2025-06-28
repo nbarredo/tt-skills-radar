@@ -17,8 +17,12 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExcelImport } from "@/components/excel-import";
-import { EntityImport } from "@/components/entity-import";
+import { DataLoader } from "@/components/data-loader";
+import { ClientHistoryQuery } from "@/components/client-history-query";
+import { SkillsByCategoryQuery } from "@/components/skills-by-category-query";
+import { SimpleBarChart } from "@/components/charts/simple-bar-chart";
+import { SimplePieChart } from "@/components/charts/simple-pie-chart";
+
 import {
   Users,
   Brain,
@@ -29,12 +33,15 @@ import {
   X,
 } from "lucide-react";
 import {
-  memberStorage,
-  skillStorage,
-  knowledgeAreaStorage,
-  skillCategoryStorage,
-  memberSkillStorage,
-} from "@/lib/storage";
+  memberDb,
+  skillDb,
+  knowledgeAreaDb,
+  skillCategoryDb,
+  memberSkillDb,
+  initDatabase,
+  loadExcelData,
+  dbUtils,
+} from "@/lib/database";
 import type { Member, Skill, KnowledgeArea, SkillCategory } from "@/types";
 
 export function Dashboard() {
@@ -42,6 +49,7 @@ export function Dashboard() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [knowledgeAreas, setKnowledgeAreas] = useState<KnowledgeArea[]>([]);
   const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Filters
   const [nameFilter, setNameFilter] = useState("");
@@ -53,11 +61,61 @@ export function Dashboard() {
   const [categoryFilter, setCategoryFilter] = useState("");
 
   useEffect(() => {
-    // Load data from localStorage
-    setMembers(memberStorage.getAll());
-    setSkills(skillStorage.getAll());
-    setKnowledgeAreas(knowledgeAreaStorage.getAll());
-    setSkillCategories(skillCategoryStorage.getAll());
+    // Initialize database and load data
+    const initializeData = async () => {
+      initDatabase();
+
+      // Force reload data from file to ensure we have the latest
+      try {
+        await dbUtils.forceReload();
+        console.log("Successfully force reloaded all data");
+      } catch (error) {
+        console.error("Failed to force reload data:", error);
+        // Fallback to regular load
+        try {
+          await loadExcelData();
+          console.log("Fallback: Excel data loaded successfully");
+        } catch (fallbackError) {
+          console.error("Failed to load Excel data:", fallbackError);
+        }
+      }
+
+      // Load data into state
+      const memberData = memberDb.getAll();
+      console.log("=== DASHBOARD DATA CHECK ===");
+      console.log("Total members loaded:", memberData.length);
+      console.log("Sample member locations:");
+      memberData
+        .slice(0, 5)
+        .forEach((m) =>
+          console.log(
+            `${m.fullName}: ${m.location} (${m.availabilityStatus}) - ${m.currentAssignedClient}`
+          )
+        );
+
+      // Location distribution
+      const locations: Record<string, number> = {};
+      memberData.forEach((m) => {
+        locations[m.location] = (locations[m.location] || 0) + 1;
+      });
+      console.log("Location distribution:", locations);
+
+      // Availability distribution
+      const availability: Record<string, number> = {};
+      memberData.forEach((m) => {
+        availability[m.availabilityStatus] =
+          (availability[m.availabilityStatus] || 0) + 1;
+      });
+      console.log("Availability distribution:", availability);
+
+      setMembers(memberData);
+      setSkills(skillDb.getAll());
+      setKnowledgeAreas(knowledgeAreaDb.getAll());
+      setSkillCategories(skillCategoryDb.getAll());
+      setIsDataLoaded(dbUtils.isInitialized());
+    };
+
+    initializeData();
   }, []);
 
   // Get unique clients from members
@@ -99,7 +157,7 @@ export function Dashboard() {
 
       // Skill-based filters
       if (knowledgeAreaFilter || skillCategoryFilter || skillFilter) {
-        const memberSkills = memberSkillStorage.getByMemberId(member.id);
+        const memberSkills = memberSkillDb.getByMemberId(member.id);
         const memberSkillIds = memberSkills.map((ms) => ms.skillId);
 
         if (skillFilter && !memberSkillIds.includes(skillFilter)) {
@@ -151,38 +209,56 @@ export function Dashboard() {
     { name: "Skill Categories", value: skillCategories.length, icon: Tags },
   ];
 
-  // Aggregate unique skills for the selected techie category
-  const categorySkills = useMemo(() => {
-    if (!categoryFilter) return [] as string[];
+  const handleDataLoaded = () => {
+    // Refresh data after loading
+    setMembers(memberDb.getAll());
+    setSkills(skillDb.getAll());
+    setKnowledgeAreas(knowledgeAreaDb.getAll());
+    setSkillCategories(skillCategoryDb.getAll());
+    setIsDataLoaded(true);
+  };
 
-    // Find members in the chosen category
-    const membersInCategory = members.filter(
-      (member) => member.category === categoryFilter
-    );
+  const handleRefreshData = async () => {
+    console.log("Manual refresh triggered");
+    try {
+      await dbUtils.forceReload();
+      console.log("Successfully refreshed all data");
 
-    const skillIds = new Set<string>();
+      // Reload state
+      const memberData = memberDb.getAll();
+      console.log("=== MANUAL REFRESH DATA CHECK ===");
+      console.log("Total members reloaded:", memberData.length);
 
-    membersInCategory.forEach((member) => {
-      const mSkills = memberSkillStorage.getByMemberId(member.id);
-      mSkills.forEach((ms) => skillIds.add(ms.skillId));
-    });
-
-    const idToName = new Map(skills.map((s) => [s.id, s.name] as const));
-
-    return Array.from(skillIds)
-      .map((id) => idToName.get(id) || id)
-      .sort();
-  }, [categoryFilter, members, skills]);
+      setMembers(memberData);
+      setSkills(skillDb.getAll());
+      setKnowledgeAreas(knowledgeAreaDb.getAll());
+      setSkillCategories(skillCategoryDb.getAll());
+      setIsDataLoaded(true);
+    } catch (error) {
+      console.error("Failed to refresh data:", error);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome to TT Skills Radar. Manage and explore techie skills and
-          expertise.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome to TT Skills Radar. Manage and explore techie skills and
+              expertise.
+            </p>
+          </div>
+          <Button onClick={handleRefreshData} variant="outline">
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Refresh Data
+          </Button>
+        </div>
       </div>
+
+      {/* Data Loader */}
+      {!isDataLoaded && <DataLoader onDataLoaded={handleDataLoaded} />}
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -197,6 +273,79 @@ export function Dashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Analytics Charts */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Members by Client Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Members by Client</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimpleBarChart
+              data={uniqueClients.map((client) => ({
+                name: client === "Available" ? "Available" : client,
+                value: members.filter((m) => m.currentAssignedClient === client)
+                  .length,
+                color: client === "Available" ? "#6b7280" : undefined,
+              }))}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Members by Country Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Members by Country</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimplePieChart
+              data={[...new Set(members.map((m) => m.location))].map(
+                (location) => ({
+                  name: location,
+                  value: members.filter((m) => m.location === location).length,
+                })
+              )}
+              size={160}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Availability Status Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Availability Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimplePieChart
+              data={[
+                {
+                  name: "Available",
+                  value: members.filter(
+                    (m) => m.availabilityStatus === "Available"
+                  ).length,
+                  color: "#10b981",
+                },
+                {
+                  name: "Assigned",
+                  value: members.filter(
+                    (m) => m.availabilityStatus === "Assigned"
+                  ).length,
+                  color: "#3b82f6",
+                },
+                {
+                  name: "Available Soon",
+                  value: members.filter(
+                    (m) => m.availabilityStatus === "Available Soon"
+                  ).length,
+                  color: "#f59e0b",
+                },
+              ]}
+              size={160}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -429,33 +578,35 @@ export function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Aggregated Skills for Selected Category */}
-      {categoryFilter && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {categoryFilter} Skills ({categorySkills.length})
-            </CardTitle>
-            <CardDescription>
-              Unique skills from members in the selected category
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {categorySkills.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                No skills found for this category.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-1">
-                {categorySkills.map((skill) => (
-                  <Badge key={skill} variant="secondary">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Advanced Queries */}
+      {isDataLoaded && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Client History Query */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Members by Client History</CardTitle>
+              <CardDescription>
+                Find all members who have worked for a specific client
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ClientHistoryQuery />
+            </CardContent>
+          </Card>
+
+          {/* Skills by Category Query */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Skills by Techie Category</CardTitle>
+              <CardDescription>
+                View all skills possessed by members in a specific category
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SkillsByCategoryQuery />
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Members List */}
@@ -478,7 +629,7 @@ export function Dashboard() {
               filteredMembers.map((member) => (
                 <Link
                   key={member.id}
-                  to={`/members/${member.id}`}
+                  to={`/member-profile/${member.id}`}
                   className="block"
                 >
                   <Card className="hover:bg-accent transition-colors">
@@ -519,25 +670,6 @@ export function Dashboard() {
                 </Link>
               ))
             )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Import Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="h-5 w-5" />
-            Import Data
-          </CardTitle>
-          <CardDescription>
-            Import members and entities from Excel files
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <ExcelImport />
-            <EntityImport />
           </div>
         </CardContent>
       </Card>

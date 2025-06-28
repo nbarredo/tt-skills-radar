@@ -1,0 +1,6 @@
+skill_name,category,knowledge_area,description
+React,Frontend Frameworks,Web Technologies,A JavaScript library for building user interfaces
+Python,Programming Languages,Technologies,High-level programming language
+Node,Backend Frameworks,Web Technologies,JavaScript runtime for server-side development
+Angular,Frontend Frameworks,Web Technologies,TypeScript-based web application framework
+Vue,Frontend Frameworks,Web Technologies,Progressive JavaScript framework 

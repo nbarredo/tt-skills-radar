@@ -1,0 +1,95 @@
+[
+  {
+    "full_name": "Alice Johnson",
+    "email": "alice.johnson@company.com",
+    "hire_date": "2022-03-15",
+    "category": "Builder",
+    "location": "New York",
+    "current_client": "TechCorp",
+    "availability": "Assigned",
+    "bio": "Experienced full-stack developer with expertise in React and Node.js",
+    "years_experience": 5,
+    "skills": [
+      { "name": "React", "level": 4 },
+      { "name": "Node.js", "level": 4 },
+      { "name": "TypeScript", "level": 3 },
+      { "name": "MongoDB", "level": 3 },
+      { "name": "AWS", "level": 2 }
+    ]
+  },
+  {
+    "full_name": "Bob Smith",
+    "email": "bob.smith@company.com",
+    "hire_date": "2021-01-10",
+    "category": "Solver",
+    "location": "San Francisco",
+    "current_client": "",
+    "availability": "Available",
+    "bio": "Senior software architect specializing in cloud solutions and microservices",
+    "years_experience": 8,
+    "skills": [
+      { "name": "Java", "level": 5 },
+      { "name": "Spring Boot", "level": 5 },
+      { "name": "Kubernetes", "level": 4 },
+      { "name": "Docker", "level": 4 },
+      { "name": "PostgreSQL", "level": 4 },
+      { "name": "AWS", "level": 4 }
+    ]
+  },
+  {
+    "full_name": "Carol Davis",
+    "email": "carol.davis@company.com",
+    "hire_date": "2023-06-01",
+    "category": "Starter",
+    "location": "Austin",
+    "current_client": "StartupXYZ",
+    "availability": "Assigned",
+    "bio": "Junior developer passionate about frontend technologies and user experience",
+    "years_experience": 2,
+    "skills": [
+      { "name": "JavaScript", "level": 3 },
+      { "name": "React", "level": 3 },
+      { "name": "CSS", "level": 4 },
+      { "name": "HTML", "level": 4 },
+      { "name": "Git", "level": 2 }
+    ]
+  },
+  {
+    "full_name": "David Wilson",
+    "email": "david.wilson@company.com",
+    "hire_date": "2020-09-20",
+    "category": "Wizard",
+    "location": "London",
+    "current_client": "",
+    "availability": "Available Soon",
+    "bio": "Technical lead with deep expertise in machine learning and data science",
+    "years_experience": 12,
+    "skills": [
+      { "name": "Python", "level": 5 },
+      { "name": "Machine Learning", "level": 5 },
+      { "name": "TensorFlow", "level": 4 },
+      { "name": "Data Science", "level": 5 },
+      { "name": "SQL", "level": 4 },
+      { "name": "Apache Spark", "level": 3 }
+    ]
+  },
+  {
+    "full_name": "Eva Martinez",
+    "email": "eva.martinez@company.com",
+    "hire_date": "2022-11-08",
+    "category": "Builder",
+    "location": "Madrid",
+    "current_client": "FinanceApp",
+    "availability": "Assigned",
+    "bio": "DevOps engineer focused on automation and infrastructure as code",
+    "years_experience": 6,
+    "skills": [
+      { "name": "DevOps", "level": 4 },
+      { "name": "Terraform", "level": 4 },
+      { "name": "Jenkins", "level": 3 },
+      { "name": "Linux", "level": 4 },
+      { "name": "Bash", "level": 3 },
+      { "name": "Azure", "level": 3 }
+    ]
+  }
+]

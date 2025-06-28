@@ -1,0 +1,74 @@
+{
+  "import_date": "2024-01-20",
+  "source": "HR System Export",
+  "data": {
+    "team_members": [
+      {
+        "name": "Frank Thompson",
+        "email": "frank.thompson@company.com",
+        "department": "Engineering",
+        "role": "Senior Developer",
+        "hire_date": "2021-05-12",
+        "location": "Seattle",
+        "status": "Active",
+        "level": "Solver"
+      },
+      {
+        "name": "Grace Lee",
+        "email": "grace.lee@company.com",
+        "department": "Engineering",
+        "role": "Tech Lead",
+        "hire_date": "2019-08-03",
+        "location": "Vancouver",
+        "status": "Active",
+        "level": "Wizard"
+      }
+    ],
+    "skills_inventory": [
+      {
+        "technology": "Vue.js",
+        "category": "Frontend Framework",
+        "domain": "Web Development",
+        "description": "Progressive JavaScript framework for building user interfaces",
+        "market_demand": "High",
+        "learning_curve": "Medium"
+      },
+      {
+        "technology": "GraphQL",
+        "category": "API Technology",
+        "domain": "Backend Development",
+        "description": "Query language and runtime for APIs",
+        "market_demand": "Growing",
+        "learning_curve": "Medium"
+      }
+    ],
+    "client_projects": [
+      {
+        "client_name": "InnovateTech",
+        "industry_sector": "Technology",
+        "project_type": "Web Application",
+        "location": "Silicon Valley",
+        "status": "Active",
+        "team_size": 5,
+        "duration_months": 8,
+        "technologies_used": ["React", "Node.js", "PostgreSQL"]
+      }
+    ],
+    "competency_matrix": [
+      {
+        "employee": "frank.thompson@company.com",
+        "skill": "Vue.js",
+        "current_level": 3,
+        "target_level": 4,
+        "assessment_date": "2024-01-15"
+      },
+      {
+        "employee": "grace.lee@company.com",
+        "skill": "GraphQL",
+        "current_level": 4,
+        "target_level": 5,
+        "assessment_date": "2024-01-15"
+      }
+    ]
+  }
+}

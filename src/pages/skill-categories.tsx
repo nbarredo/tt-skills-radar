@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { skillCategoryStorage } from "@/lib/storage";
+import { skillCategoryDb, initDatabase } from "@/lib/database";
 import type { SkillCategory } from "@/types";
 
 export function SkillCategories() {
@@ -42,11 +42,12 @@ export function SkillCategories() {
   });
 
   useEffect(() => {
+    initDatabase();
     loadSkillCategories();
   }, []);
 
   const loadSkillCategories = () => {
-    setSkillCategories(skillCategoryStorage.getAll());
+    setSkillCategories(skillCategoryDb.getAll());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -59,7 +60,7 @@ export function SkillCategories() {
 
     if (editingCategory) {
       // Update existing
-      skillCategoryStorage.update(editingCategory.id, formData);
+      skillCategoryDb.update(editingCategory.id, formData);
       toast.success("Skill category updated successfully");
     } else {
       // Create new
@@ -67,7 +68,7 @@ export function SkillCategories() {
         id: crypto.randomUUID(),
         ...formData,
       };
-      skillCategoryStorage.add(newCategory);
+      skillCategoryDb.add(newCategory);
       toast.success("Skill category created successfully");
     }
 
@@ -86,7 +87,7 @@ export function SkillCategories() {
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this skill category?")) {
-      skillCategoryStorage.delete(id);
+      skillCategoryDb.delete(id);
       toast.success("Skill category deleted successfully");
       loadSkillCategories();
     }

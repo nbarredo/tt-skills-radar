@@ -11,10 +11,19 @@ import {
   Menu,
   Building2,
   Calendar,
+  Bot,
+  Upload,
+  TrendingUp,
+  Trophy,
+  Target,
+  Network,
+  RefreshCw,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { geminiChatService } from "@/lib/gemini";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
@@ -25,11 +34,48 @@ const navigation = [
   { name: "Members", href: "/members", icon: Users },
   { name: "Clients", href: "/clients", icon: Building2 },
   { name: "Assignments", href: "/member-assignments", icon: Calendar },
+  { name: "Data Import", href: "/imports", icon: Upload },
+  { name: "AI Assistant", href: "/chatbot", icon: Bot },
+  { name: "Sales Insights", href: "/sales-insights", icon: TrendingUp },
+  { name: "Solutions Insights", href: "/solutions-insights", icon: Trophy },
+  { name: "People Insights", href: "/people-insights", icon: Target },
+  { name: "Production Insights", href: "/production-insights", icon: Network },
+  {
+    name: "Documentation",
+    href: "/documentation.html",
+    icon: BookOpen,
+    external: true,
+  },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contextStatus, setContextStatus] = useState(
+    geminiChatService.getContextStatus()
+  );
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Update context status every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setContextStatus(geminiChatService.getContextStatus());
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleRefreshContext = async () => {
+    setRefreshing(true);
+    try {
+      await geminiChatService.refreshContext();
+      setContextStatus(geminiChatService.getContextStatus());
+    } catch (error) {
+      console.error("Error refreshing context:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,6 +89,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <nav className="flex-1 px-2 space-y-1">
               {navigation.map((item) => {
                 const isActive = location.pathname === item.href;
+
+                if (item.external) {
+                  return (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                        "group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
+                      )}
+                    >
+                      <item.icon
+                        className={cn(
+                          "text-muted-foreground group-hover:text-accent-foreground",
+                          "mr-3 flex-shrink-0 h-5 w-5"
+                        )}
+                      />
+                      {item.name}
+                    </a>
+                  );
+                }
+
                 return (
                   <Link
                     key={item.name}
@@ -69,6 +139,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="flex-shrink-0 flex border-t border-border p-4">
+            {/* AI Context Status */}
+            {contextStatus.hasContext && (
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>AI Context Active</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefreshContext}
+                  disabled={refreshing}
+                  className="h-6 px-2"
+                >
+                  <RefreshCw
+                    className={cn("h-3 w-3", refreshing && "animate-spin")}
+                  />
+                </Button>
+              </div>
+            )}
             <ModeToggle />
           </div>
         </div>
@@ -79,6 +169,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between border-b bg-card px-4 py-2">
           <h1 className="text-lg font-bold">TT Skills Radar</h1>
           <div className="flex items-center gap-2">
+            {/* AI Context Status */}
+            {contextStatus.hasContext && (
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>AI Context Active</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefreshContext}
+                  disabled={refreshing}
+                  className="h-6 px-2"
+                >
+                  <RefreshCw
+                    className={cn("h-3 w-3", refreshing && "animate-spin")}
+                  />
+                </Button>
+              </div>
+            )}
             <ModeToggle />
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
@@ -90,6 +200,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <nav className="mt-5 space-y-1">
                   {navigation.map((item) => {
                     const isActive = location.pathname === item.href;
+
+                    if (item.external) {
+                      return (
+                        <a
+                          key={item.name}
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={cn(
+                            "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                            "group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
+                          )}
+                        >
+                          <item.icon
+                            className={cn(
+                              "text-muted-foreground group-hover:text-accent-foreground",
+                              "mr-3 flex-shrink-0 h-5 w-5"
+                            )}
+                          />
+                          {item.name}
+                        </a>
+                      );
+                    }
+
                     return (
                       <Link
                         key={item.name}

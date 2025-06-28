@@ -1,0 +1,74 @@
+Client Name: TechCorp Solutions
+Industry: Technology
+Location: San Francisco, CA
+Status: Active
+Description: Leading technology company specializing in enterprise software solutions
+Contact: john.doe@techcorp.com
+Project Count: 12
+Revenue: $2.5M
+
+---
+
+Client Name: FinanceApp Inc
+Industry: Financial Services
+Location: New York, NY
+Status: Active
+Description: Fintech startup developing mobile banking applications
+Contact: sarah.smith@financeapp.com
+Project Count: 8
+Revenue: $1.8M
+
+---
+
+Client Name: StartupXYZ
+Industry: E-commerce
+Location: Austin, TX
+Status: Active
+Description: Fast-growing e-commerce platform for small businesses
+Contact: mike.johnson@startupxyz.com
+Project Count: 5
+Revenue: $950K
+
+---
+
+Client Name: HealthTech Medical
+Industry: Healthcare
+Location: Boston, MA
+Status: Active
+Description: Healthcare technology company developing patient management systems
+Contact: lisa.brown@healthtech.com
+Project Count: 15
+Revenue: $3.2M
+
+---
+
+Client Name: EduLearn Platform
+Industry: Education
+Location: Chicago, IL
+Status: On Hold
+Description: Online learning platform for professional development
+Contact: david.wilson@edulearn.com
+Project Count: 3
+Revenue: $650K
+
+---
+
+Client Name: GreenEnergy Corp
+Industry: Renewable Energy
+Location: Portland, OR
+Status: Active
+Description: Solar energy solutions for residential and commercial properties
+Contact: emma.davis@greenenergy.com
+Project Count: 7
+Revenue: $1.4M
+
+---
+
+Client Name: RetailMax Systems
+Industry: Retail
+Location: Denver, CO
+Status: Inactive
+Description: Point-of-sale and inventory management systems for retail chains
+Contact: alex.martinez@retailmax.com
+Project Count: 2
+Revenue: $400K 

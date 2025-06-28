@@ -35,10 +35,11 @@ import {
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  skillStorage,
-  knowledgeAreaStorage,
-  skillCategoryStorage,
-} from "@/lib/storage";
+  skillDb,
+  knowledgeAreaDb,
+  skillCategoryDb,
+  initDatabase,
+} from "@/lib/database";
 import type { Skill, KnowledgeArea, SkillCategory } from "@/types";
 
 export function Skills() {
@@ -55,13 +56,14 @@ export function Skills() {
   });
 
   useEffect(() => {
+    initDatabase();
     loadData();
   }, []);
 
   const loadData = () => {
-    setSkills(skillStorage.getAll());
-    setKnowledgeAreas(knowledgeAreaStorage.getAll());
-    setSkillCategories(skillCategoryStorage.getAll());
+    setSkills(skillDb.getAll());
+    setKnowledgeAreas(knowledgeAreaDb.getAll());
+    setSkillCategories(skillCategoryDb.getAll());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -79,7 +81,7 @@ export function Skills() {
 
     if (editingSkill) {
       // Update existing
-      skillStorage.update(editingSkill.id, formData);
+      skillDb.update(editingSkill.id, formData);
       toast.success("Skill updated successfully");
     } else {
       // Create new
@@ -87,7 +89,7 @@ export function Skills() {
         id: crypto.randomUUID(),
         ...formData,
       };
-      skillStorage.add(newSkill);
+      skillDb.add(newSkill);
       toast.success("Skill created successfully");
     }
 
@@ -108,7 +110,7 @@ export function Skills() {
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this skill?")) {
-      skillStorage.delete(id);
+      skillDb.delete(id);
       toast.success("Skill deleted successfully");
       loadData();
     }

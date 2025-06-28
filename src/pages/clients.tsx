@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,9 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Client } from "@/lib/types";
-import { clientStorage } from "@/lib/storage";
+import { Client } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+import { clientDb, initDatabase } from "@/lib/database";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -52,11 +53,13 @@ export default function ClientsPage() {
   });
 
   useEffect(() => {
+    initDatabase();
     loadClients();
   }, []);
 
   const loadClients = () => {
-    setClients(clientStorage.getAll());
+    const allClients = clientDb.getAll();
+    setClients(allClients);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,11 +68,7 @@ export default function ClientsPage() {
 
     if (editingClient) {
       // Update existing client
-      clientStorage.update(editingClient.id, {
-        ...formData,
-        updatedAt: now,
-      });
-      loadClients();
+      clientDb.update(editingClient.id, { ...formData, updatedAt: now });
       toast({
         title: "Client updated",
         description: "The client has been updated successfully.",
@@ -82,13 +81,14 @@ export default function ClientsPage() {
         createdAt: now,
         updatedAt: now,
       };
-      clientStorage.add(newClient);
-      loadClients();
+      clientDb.add(newClient);
       toast({
         title: "Client created",
         description: "The new client has been created successfully.",
       });
     }
+
+    loadClients();
 
     setIsDialogOpen(false);
     resetForm();
@@ -108,7 +108,7 @@ export default function ClientsPage() {
 
   const handleDelete = (clientId: string) => {
     if (window.confirm("Are you sure you want to delete this client?")) {
-      clientStorage.delete(clientId);
+      clientDb.delete(clientId);
       loadClients();
       toast({
         title: "Client deleted",
@@ -262,10 +262,16 @@ export default function ClientsPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    <Link to={`/client-detail/${client.id}`}>
+                      <Button variant="ghost" size="icon" title="View Details">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </Link>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(client)}
+                      title="Edit Client"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -273,6 +279,7 @@ export default function ClientsPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(client.id)}
+                      title="Delete Client"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
