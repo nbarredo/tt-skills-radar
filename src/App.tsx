@@ -20,9 +20,11 @@ import { PeopleInsightsPage } from "@/pages/people-insights";
 import { ProductionInsightsPage } from "@/pages/production-insights";
 
 function App() {
+  const basename = import.meta.env.PROD ? "/tt-skills-radar" : "";
+
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <Router>
+      <Router basename={basename}>
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />

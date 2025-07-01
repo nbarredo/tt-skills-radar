@@ -82,8 +82,11 @@ export async function loadExcelData() {
   try {
     console.log("Loading data from db.json...");
 
-    // Fetch the JSON data
-    const response = await fetch("/data/db.json");
+    // Fetch the JSON data - use relative path for GitHub Pages compatibility
+    const basePath = import.meta.env.BASE_URL || "/";
+    const dataUrl = `${basePath}data/db.json`.replace(/\/+/g, "/");
+    console.log("Fetching from:", dataUrl);
+    const response = await fetch(dataUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch data: ${response.statusText}`);
     }

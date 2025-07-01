@@ -333,7 +333,9 @@ export function SmartFileImport({
     // Get existing database data for duplicate detection
     let existingData: any = {};
     try {
-      const response = await fetch("/data/db.json");
+      const basePath = import.meta.env.BASE_URL || "/";
+      const dataUrl = `${basePath}data/db.json`.replace(/\/+/g, "/");
+      const response = await fetch(dataUrl);
       if (response.ok) {
         existingData = await response.json();
       }
