@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +17,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import * as XLSX from "xlsx";
 
 interface FileUploadResult {
   fileName: string;
@@ -82,6 +82,7 @@ export function SmartFileImport({
   } | null>(null);
   const [importRecords, setImportRecords] = useState<ImportRecord[]>([]);
   const [selectedNestedArray, setSelectedNestedArray] = useState<string>("");
+  const [isSwitchingTab, setIsSwitchingTab] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -247,11 +248,12 @@ export function SmartFileImport({
         fileName.endsWith(".xlsx") ||
         fileName.endsWith(".xls")
       ) {
-        // For now, we'll ask user to convert to CSV or JSON
-        // In a full implementation, you'd use a library like xlsx
-        throw new Error(
-          "Excel files not yet supported. Please convert to CSV or JSON format."
-        );
+        const workbook = XLSX.read(content, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        return jsonData.length > 0 ? jsonData : [];
       }
 
       // Text files - try to detect structure
@@ -580,6 +582,8 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
   const switchToNestedArray = async (arrayKey: string) => {
     if (!uploadResult || !uploadResult.rawContent) return;
 
+    setIsSwitchingTab(true);
+
     try {
       const originalData = JSON.parse(uploadResult.rawContent);
       const nestedData = originalData.data?.[arrayKey];
@@ -624,6 +628,8 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
       }
     } catch (error) {
       console.error("Failed to switch nested array:", error);
+    } finally {
+      setIsSwitchingTab(false);
     }
   };
 
@@ -741,15 +747,36 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
           </div>
         )}
 
+        {/* Tab Switching Progress */}
+        {isSwitchingTab && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span>Switching data view and re-analyzing...</span>
+              <Bot className="h-4 w-4 animate-spin" />
+            </div>
+            <Progress value={100} className="animate-pulse" />
+          </div>
+        )}
+
         {/* Upload Results */}
         {uploadResult && (
           <Tabs defaultValue="analysis" className="w-full">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="analysis">Analysis</TabsTrigger>
-              <TabsTrigger value="mapping">Field Mapping</TabsTrigger>
-              <TabsTrigger value="preview">Data Preview</TabsTrigger>
-              <TabsTrigger value="confirm">Confirm Records</TabsTrigger>
-              <TabsTrigger value="import">Import</TabsTrigger>
+              <TabsTrigger value="analysis" disabled={isSwitchingTab}>
+                Analysis
+              </TabsTrigger>
+              <TabsTrigger value="mapping" disabled={isSwitchingTab}>
+                Field Mapping
+              </TabsTrigger>
+              <TabsTrigger value="preview" disabled={isSwitchingTab}>
+                Data Preview
+              </TabsTrigger>
+              <TabsTrigger value="confirm" disabled={isSwitchingTab}>
+                Confirm Records
+              </TabsTrigger>
+              <TabsTrigger value="import" disabled={isSwitchingTab}>
+                Import
+              </TabsTrigger>
             </TabsList>
 
             {/* File Analysis Tab */}
@@ -876,9 +903,12 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
                             key={index}
                             variant="outline"
                             size="sm"
+                            disabled={isSwitchingTab}
                             onClick={() => switchToNestedArray(nested.key)}
                           >
-                            Switch to {nested.key} ({nested.count})
+                            {isSwitchingTab
+                              ? "Switching..."
+                              : `Switch to ${nested.key} (${nested.count})`}
                           </Button>
                         ))}
                       </div>
