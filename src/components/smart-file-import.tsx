@@ -83,6 +83,10 @@ export function SmartFileImport({
   const [importRecords, setImportRecords] = useState<ImportRecord[]>([]);
   const [selectedNestedArray, setSelectedNestedArray] = useState<string>("");
   const [isSwitchingTab, setIsSwitchingTab] = useState(false);
+  const [excelSheets, setExcelSheets] = useState<
+    Array<{ name: string; data: any[]; rowCount: number }>
+  >([]);
+  const [selectedSheet, setSelectedSheet] = useState<string>("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -249,11 +253,28 @@ export function SmartFileImport({
         fileName.endsWith(".xls")
       ) {
         const workbook = XLSX.read(content, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        return jsonData.length > 0 ? jsonData : [];
+        // Process all sheets
+        const sheets = workbook.SheetNames.map((sheetName) => {
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          return {
+            name: sheetName,
+            data: jsonData,
+            rowCount: jsonData.length,
+          };
+        });
+
+        // Store sheets for later selection
+        setExcelSheets(sheets);
+
+        // Return the first sheet with the most data as default
+        const primarySheet = sheets.reduce((prev, current) =>
+          current.rowCount > prev.rowCount ? current : prev
+        );
+
+        setSelectedSheet(primarySheet.name);
+        return primarySheet.data.length > 0 ? primarySheet.data : [];
       }
 
       // Text files - try to detect structure
@@ -380,15 +401,33 @@ ${compressedExistingData}
 
 AVAILABLE TARGET ENTITIES:
 1. Members (id, fullName, corporateEmail, hireDate, category, location, currentAssignedClient, availabilityStatus)
+   - Common source fields: "User Full Name", "Work email", "Category", "Country", "City", "Gender", "Assigned client"
 2. Skills (id, name, purpose, knowledgeAreaId, skillCategoryId)
+   - Common source fields: "Skill", "Technology", "Tool", "Framework"
 3. MemberSkills (memberId, skillId, scaleId, proficiencyValue)
+   - Common source fields: "Email" + "Skill" + "Expertise Full Name"
 4. Clients (id, name, description, industry, location, status)
+   - Common source fields: "Assigned client", "Client", "Company"
 5. MemberProfiles (id, memberId, bio, aboutMe, contactInfo, etc.)
+
+FIELD MAPPING GUIDELINES:
+- "User Full Name" → Members.fullName
+- "Work email" → Members.corporateEmail  
+- "Category" → Members.category
+- "Country" → Members.location
+- "Gender" → Members.gender (if available)
+- "Assigned client" → Members.currentAssignedClient
+- "User Alias" → Members.alias (if available)
+- "City" → Members.city (if available)
 
 DUPLICATE DETECTION RULES:
 - Skills: Match by name (case-insensitive, ignore spaces/punctuation)
 - Members: Match by email first, then by name (case-insensitive)
 - Clients: Match by name (case-insensitive)
+
+IMPORT BEHAVIOR:
+- When importing member data, OVERWRITE existing assignments, categories, countries, gender, etc.
+- Update existing records rather than creating duplicates
 
 INSTRUCTIONS:
 1. Provide a brief analysis of the data structure and content
@@ -628,6 +667,61 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
       }
     } catch (error) {
       console.error("Failed to switch nested array:", error);
+    } finally {
+      setIsSwitchingTab(false);
+    }
+  };
+
+  const switchToExcelSheet = async (sheetName: string) => {
+    if (!uploadResult || excelSheets.length === 0) return;
+
+    setIsSwitchingTab(true);
+
+    try {
+      const selectedSheetData = excelSheets.find(
+        (sheet) => sheet.name === sheetName
+      );
+
+      if (selectedSheetData && selectedSheetData.data.length > 0) {
+        setSelectedSheet(sheetName);
+
+        // Re-analyze with the new sheet data
+        const aiAnalysis = await analyzeFileWithAI(
+          `${uploadResult.fileName} - ${sheetName}`,
+          uploadResult.fileType,
+          selectedSheetData.data
+        );
+
+        // Update the upload result with new analysis
+        const updatedResult = {
+          ...uploadResult,
+          content: selectedSheetData.data,
+          aiAnalysis: aiAnalysis.analysis,
+          mappingSuggestions: aiAnalysis.mappings,
+          errors: aiAnalysis.errors,
+          duplicateCount: aiAnalysis.duplicateCount,
+          duplicateMatches: aiAnalysis.duplicateMatches,
+        };
+
+        setUploadResult(updatedResult);
+
+        // Auto-select high confidence mappings
+        const autoMappings: Record<string, MappingSuggestion> = {};
+        aiAnalysis.mappings?.forEach((mapping: MappingSuggestion) => {
+          if (mapping.confidence > 0.8) {
+            autoMappings[mapping.sourceField] = mapping;
+          }
+        });
+        setSelectedMappings(autoMappings);
+
+        // Prepare new import records with duplicate detection
+        await prepareImportRecordsWithDuplicateInfo(
+          selectedSheetData.data,
+          aiAnalysis.duplicateMatches || []
+        );
+      }
+    } catch (error) {
+      console.error("Failed to switch Excel sheet:", error);
     } finally {
       setIsSwitchingTab(false);
     }
@@ -915,6 +1009,45 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
                     </AlertDescription>
                   </Alert>
                 )}
+
+              {/* Show Excel sheets if detected */}
+              {excelSheets.length > 1 && (
+                <Alert>
+                  <FileSpreadsheet className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Multiple Excel Sheets Detected:</strong> This Excel
+                    file contains multiple sheets:
+                    <ul className="list-disc list-inside mt-2">
+                      {excelSheets.map((sheet, index) => (
+                        <li key={index}>
+                          <strong>{sheet.name}</strong>: {sheet.rowCount}{" "}
+                          records
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-sm">
+                      Currently analyzing: <strong>{selectedSheet}</strong>
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {excelSheets.map((sheet, index) => (
+                        <Button
+                          key={index}
+                          variant={
+                            sheet.name === selectedSheet ? "default" : "outline"
+                          }
+                          size="sm"
+                          disabled={isSwitchingTab}
+                          onClick={() => switchToExcelSheet(sheet.name)}
+                        >
+                          {isSwitchingTab
+                            ? "Switching..."
+                            : `${sheet.name} (${sheet.rowCount})`}
+                        </Button>
+                      ))}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Auto-ID Generation Notice */}
               {uploadResult.content &&
