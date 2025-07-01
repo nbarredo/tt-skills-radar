@@ -83,6 +83,7 @@ export function SmartFileImport({
   const [importRecords, setImportRecords] = useState<ImportRecord[]>([]);
   const [selectedNestedArray, setSelectedNestedArray] = useState<string>("");
   const [isSwitchingTab, setIsSwitchingTab] = useState(false);
+  const [isPreparingRecords, setIsPreparingRecords] = useState(false);
   const [excelSheets, setExcelSheets] = useState<
     Array<{ name: string; data: any[]; rowCount: number }>
   >([]);
@@ -572,34 +573,40 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
     data: any[],
     duplicateMatches: any[]
   ) => {
-    // Determine entity type from mappings
-    const primaryEntity =
-      uploadResult?.mappingSuggestions?.[0]?.targetEntity || "Records";
+    setIsPreparingRecords(true);
 
-    // Add IDs to records that don't have them
-    const dataWithIds = addMissingIds(data, primaryEntity);
+    try {
+      // Determine entity type from mappings
+      const primaryEntity =
+        uploadResult?.mappingSuggestions?.[0]?.targetEntity || "Records";
 
-    const records: ImportRecord[] = dataWithIds.map((record, index) => {
-      // Check if this record was identified as a duplicate by AI
-      const recordName =
-        record.name || record.skill_name || record.email || record.fullName;
+      // Add IDs to records that don't have them
+      const dataWithIds = addMissingIds(data, primaryEntity);
 
-      const duplicateMatch = duplicateMatches.find((match) => {
-        return recordName && match.uploadField === recordName;
+      const records: ImportRecord[] = dataWithIds.map((record, index) => {
+        // Check if this record was identified as a duplicate by AI
+        const recordName =
+          record.name || record.skill_name || record.email || record.fullName;
+
+        const duplicateMatch = duplicateMatches.find((match) => {
+          return recordName && match.uploadField === recordName;
+        });
+
+        return {
+          id: `record-${index}`,
+          originalData: record,
+          transformedData: {},
+          isSelected: true, // Default to selected
+          hasChanges: !duplicateMatch,
+          changeType: duplicateMatch ? "update" : "new",
+          conflictFields: [],
+        };
       });
 
-      return {
-        id: `record-${index}`,
-        originalData: record,
-        transformedData: {},
-        isSelected: true, // Default to selected
-        hasChanges: !duplicateMatch,
-        changeType: duplicateMatch ? "update" : "new",
-        conflictFields: [],
-      };
-    });
-
-    setImportRecords(records);
+      setImportRecords(records);
+    } finally {
+      setIsPreparingRecords(false);
+    }
   };
 
   const toggleRecordSelection = (recordId: string) => {
@@ -856,19 +863,34 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
         {uploadResult && (
           <Tabs defaultValue="analysis" className="w-full">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="analysis" disabled={isSwitchingTab}>
+              <TabsTrigger
+                value="analysis"
+                disabled={isSwitchingTab || isPreparingRecords}
+              >
                 Analysis
               </TabsTrigger>
-              <TabsTrigger value="mapping" disabled={isSwitchingTab}>
+              <TabsTrigger
+                value="mapping"
+                disabled={isSwitchingTab || isPreparingRecords}
+              >
                 Field Mapping
               </TabsTrigger>
-              <TabsTrigger value="preview" disabled={isSwitchingTab}>
+              <TabsTrigger
+                value="preview"
+                disabled={isSwitchingTab || isPreparingRecords}
+              >
                 Data Preview
               </TabsTrigger>
-              <TabsTrigger value="confirm" disabled={isSwitchingTab}>
+              <TabsTrigger
+                value="confirm"
+                disabled={isSwitchingTab || isPreparingRecords}
+              >
                 Confirm Records
               </TabsTrigger>
-              <TabsTrigger value="import" disabled={isSwitchingTab}>
+              <TabsTrigger
+                value="import"
+                disabled={isSwitchingTab || isPreparingRecords || isImporting}
+              >
                 Import
               </TabsTrigger>
             </TabsList>
@@ -1168,139 +1190,169 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
 
             {/* Confirm Records Tab */}
             <TabsContent value="confirm" className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-sm text-muted-foreground">
-                  Select which records to import (
-                  {importRecords.filter((r) => r.isSelected).length} of{" "}
-                  {importRecords.length} selected):
+              {/* Records Preparation Loading */}
+              {isPreparingRecords && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Preparing records for confirmation...</span>
+                    <CheckCircle className="h-4 w-4 animate-spin" />
+                  </div>
+                  <Progress value={100} className="animate-pulse" />
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleAllRecords(true)}
-                  >
-                    Select All
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleAllRecords(false)}
-                  >
-                    Select None
-                  </Button>
-                </div>
-              </div>
+              )}
 
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {importRecords.map((record) => (
-                  <div
-                    key={record.id}
-                    className={cn(
-                      "border rounded-lg p-3 space-y-2",
-                      record.isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-muted"
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={record.isSelected}
-                        onCheckedChange={() => toggleRecordSelection(record.id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant={
-                              record.changeType === "new"
-                                ? "default"
-                                : record.changeType === "update"
-                                ? "secondary"
-                                : "destructive"
-                            }
-                          >
-                            {record.changeType === "new"
-                              ? "NEW"
-                              : record.changeType === "update"
-                              ? "UPDATE EXISTING"
-                              : "CONFLICT"}
-                          </Badge>
-
-                          {/* Show AI-detected duplicate info */}
-                          {record.changeType === "update" &&
-                            uploadResult?.duplicateMatches &&
-                            (() => {
-                              const recordName =
-                                record.originalData.name ||
-                                record.originalData.skill_name ||
-                                record.originalData.email ||
-                                record.originalData.fullName;
-                              const duplicateMatch =
-                                uploadResult.duplicateMatches.find(
-                                  (match) => match.uploadField === recordName
-                                );
-                              return duplicateMatch ? (
-                                <Badge variant="outline">
-                                  Matches: {duplicateMatch.existingId}
-                                </Badge>
-                              ) : null;
-                            })()}
-
-                          {record.originalData.id &&
-                            record.originalData.id
-                              .toString()
-                              .startsWith("id_") &&
-                            record.changeType === "new" && (
-                              <Badge variant="outline">ID Generated</Badge>
-                            )}
-                          {record.conflictFields &&
-                            record.conflictFields.length > 0 && (
-                              <Badge variant="destructive">
-                                {record.conflictFields.length} field conflicts
-                              </Badge>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                          {Object.entries(record.originalData)
-                            .slice(0, 4)
-                            .map(([key, value]) => (
-                              <div key={key} className="flex">
-                                <span className="font-medium text-muted-foreground min-w-20">
-                                  {key}:
-                                </span>
-                                <span className="ml-2 truncate">
-                                  {String(value).length > 30
-                                    ? String(value).substring(0, 30) + "..."
-                                    : String(value)}
-                                </span>
-                              </div>
-                            ))}
-                          {Object.keys(record.originalData).length > 4 && (
-                            <div className="text-xs text-muted-foreground col-span-full">
-                              ... and{" "}
-                              {Object.keys(record.originalData).length - 4} more
-                              fields
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              {!isPreparingRecords && (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-sm text-muted-foreground">
+                      Select which records to import (
+                      {importRecords.filter((r) => r.isSelected).length} of{" "}
+                      {importRecords.length} selected):
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleAllRecords(true)}
+                      >
+                        Select All
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleAllRecords(false)}
+                      >
+                        Select None
+                      </Button>
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {importRecords.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
-                  No records to confirm. Please complete the field mapping
-                  first.
-                </div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {importRecords.map((record) => (
+                      <div
+                        key={record.id}
+                        className={cn(
+                          "border rounded-lg p-3 space-y-2",
+                          record.isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-muted"
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={record.isSelected}
+                            onCheckedChange={() =>
+                              toggleRecordSelection(record.id)
+                            }
+                            className="mt-1"
+                          />
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant={
+                                  record.changeType === "new"
+                                    ? "default"
+                                    : record.changeType === "update"
+                                    ? "secondary"
+                                    : "destructive"
+                                }
+                              >
+                                {record.changeType === "new"
+                                  ? "NEW"
+                                  : record.changeType === "update"
+                                  ? "UPDATE EXISTING"
+                                  : "CONFLICT"}
+                              </Badge>
+
+                              {/* Show AI-detected duplicate info */}
+                              {record.changeType === "update" &&
+                                uploadResult?.duplicateMatches &&
+                                (() => {
+                                  const recordName =
+                                    record.originalData.name ||
+                                    record.originalData.skill_name ||
+                                    record.originalData.email ||
+                                    record.originalData.fullName;
+                                  const duplicateMatch =
+                                    uploadResult.duplicateMatches.find(
+                                      (match) =>
+                                        match.uploadField === recordName
+                                    );
+                                  return duplicateMatch ? (
+                                    <Badge variant="outline">
+                                      Matches: {duplicateMatch.existingId}
+                                    </Badge>
+                                  ) : null;
+                                })()}
+
+                              {record.originalData.id &&
+                                record.originalData.id
+                                  .toString()
+                                  .startsWith("id_") &&
+                                record.changeType === "new" && (
+                                  <Badge variant="outline">ID Generated</Badge>
+                                )}
+                              {record.conflictFields &&
+                                record.conflictFields.length > 0 && (
+                                  <Badge variant="destructive">
+                                    {record.conflictFields.length} field
+                                    conflicts
+                                  </Badge>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                              {Object.entries(record.originalData)
+                                .slice(0, 4)
+                                .map(([key, value]) => (
+                                  <div key={key} className="flex">
+                                    <span className="font-medium text-muted-foreground min-w-20">
+                                      {key}:
+                                    </span>
+                                    <span className="ml-2 truncate">
+                                      {String(value).length > 30
+                                        ? String(value).substring(0, 30) + "..."
+                                        : String(value)}
+                                    </span>
+                                  </div>
+                                ))}
+                              {Object.keys(record.originalData).length > 4 && (
+                                <div className="text-xs text-muted-foreground col-span-full">
+                                  ... and{" "}
+                                  {Object.keys(record.originalData).length - 4}{" "}
+                                  more fields
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {importRecords.length === 0 && (
+                    <div className="text-center text-muted-foreground py-8">
+                      No records to confirm. Please complete the field mapping
+                      first.
+                    </div>
+                  )}
+                </>
               )}
             </TabsContent>
 
             {/* Import Tab */}
             <TabsContent value="import" className="space-y-4">
+              {/* Import Loading */}
+              {isImporting && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Importing data to database...</span>
+                    <CheckCircle className="h-4 w-4 animate-spin" />
+                  </div>
+                  <Progress value={100} className="animate-pulse" />
+                </div>
+              )}
+
               <div className="space-y-4">
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
