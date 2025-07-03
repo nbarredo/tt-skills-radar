@@ -30,21 +30,22 @@ import {
 import {
   memberDb,
   memberProfileDb,
-  memberSkillDb,
   skillDb,
   scaleDb,
   initDatabase,
   loadExcelData,
 } from "@/lib/database";
 import { MemberProfileEditor } from "@/components/member-profile-editor";
-import type { Member, MemberProfile, MemberSkill, Skill, Scale } from "@/types";
+import { SkillsEditor } from "@/components/skills-editor";
+import type { Member, MemberProfile, Skill, Scale } from "@/types";
 
 export function MemberProfilePage() {
   const { id } = useParams<{ id: string }>();
   const [member, setMember] = useState<Member | null>(null);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
-  const [memberSkills, setMemberSkills] = useState<MemberSkill[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [skills, setSkills] = useState<Skill[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [scales, setScales] = useState<Scale[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +63,6 @@ export function MemberProfilePage() {
 
       const memberData = memberDb.getById(id);
       let profileData = memberProfileDb.getByMemberId(id);
-      const skillsData = memberSkillDb.getByMemberId(id);
       const allSkills = skillDb.getAll();
       const allScales = scaleDb.getAll();
 
@@ -105,7 +105,6 @@ export function MemberProfilePage() {
 
       setMember(memberData || null);
       setProfile(profileData || null);
-      setMemberSkills(skillsData);
       setSkills(allSkills);
       setScales(allScales);
     } catch (error) {
@@ -113,26 +112,6 @@ export function MemberProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getSkillName = (skillId: string) => {
-    return skills.find((s) => s.id === skillId)?.name || "Unknown Skill";
-  };
-
-  const getScaleValue = (scaleId: string, value: string) => {
-    const scale = scales.find((s) => s.id === scaleId);
-    if (!scale) return value;
-
-    const index = parseInt(value) - 1;
-    return scale.values[index] || value;
-  };
-
-  const getProficiencyColor = (value: string) => {
-    const level = parseInt(value);
-    if (level >= 4) return "bg-green-500";
-    if (level >= 3) return "bg-blue-500";
-    if (level >= 2) return "bg-yellow-500";
-    return "bg-gray-500";
   };
 
   const getInitials = (name: string) => {
@@ -268,51 +247,14 @@ export function MemberProfilePage() {
 
         {/* Skills Tab */}
         <TabsContent value="skills">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Code className="h-5 w-5" />
-                Technical Skills ({memberSkills.length})
-              </CardTitle>
-              <CardDescription>Skills and proficiency levels</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {memberSkills.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No skills recorded yet.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {memberSkills.map((memberSkill) => (
-                    <Card
-                      key={`${memberSkill.skillId}-${memberSkill.scaleId}`}
-                      className="p-4"
-                    >
-                      <div className="space-y-2">
-                        <h4 className="font-medium">
-                          {getSkillName(memberSkill.skillId)}
-                        </h4>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-3 h-3 rounded-full ${getProficiencyColor(
-                              memberSkill.proficiencyValue
-                            )}`}
-                          ></div>
-                          <span className="text-sm">
-                            Level {memberSkill.proficiencyValue} -{" "}
-                            {getScaleValue(
-                              memberSkill.scaleId,
-                              memberSkill.proficiencyValue
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {member && (
+            <SkillsEditor
+              member={member}
+              onSkillsUpdated={() => {
+                loadMemberData();
+              }}
+            />
+          )}
         </TabsContent>
 
         {/* Assignments Tab */}

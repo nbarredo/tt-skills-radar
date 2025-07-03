@@ -123,8 +123,25 @@ export async function loadExcelData() {
   }
 }
 
-// Generic CRUD operations
-function getItems<T>(collection: keyof DatabaseSchema): T[] {
+// Generic CRUD operations with emergency pagination
+function getItems<T>(collection: keyof DatabaseSchema, limit?: number): T[] {
+  const database = getDatabase();
+  const items = database.data[collection] as unknown as T[];
+
+  // Emergency limit to prevent browser hangs - default to 100 items max
+  const maxItems = limit || 100;
+  if (items.length > maxItems) {
+    console.warn(
+      `Large dataset detected (${items.length} items). Limiting to ${maxItems} for performance.`
+    );
+    return items.slice(0, maxItems);
+  }
+
+  return items;
+}
+
+// Enhanced getItems for when we need all items (use carefully)
+function getAllItems<T>(collection: keyof DatabaseSchema): T[] {
   const database = getDatabase();
   return database.data[collection] as unknown as T[];
 }
@@ -199,9 +216,10 @@ export const skillCategoryDb = {
 
 // Skills
 export const skillDb = {
-  getAll: () => getItems<Skill>("skills"),
+  getAll: (limit?: number) => getItems<Skill>("skills", limit),
+  getAllUnlimited: () => getAllItems<Skill>("skills"),
   getById: (id: string) => {
-    const items = getItems<Skill>("skills");
+    const items = getAllItems<Skill>("skills");
     return items.find((item) => item.id === id);
   },
   add: (item: Skill) => addItem("skills", item),
@@ -209,11 +227,11 @@ export const skillDb = {
     updateItem("skills", id, updates),
   delete: (id: string) => deleteItem("skills", id),
   getByKnowledgeArea: (knowledgeAreaId: string) => {
-    const items = getItems<Skill>("skills");
+    const items = getAllItems<Skill>("skills");
     return items.filter((skill) => skill.knowledgeAreaId === knowledgeAreaId);
   },
   getByCategory: (categoryId: string) => {
-    const items = getItems<Skill>("skills");
+    const items = getAllItems<Skill>("skills");
     return items.filter((skill) => skill.skillCategoryId === categoryId);
   },
 };
@@ -233,13 +251,14 @@ export const scaleDb = {
 
 // Members
 export const memberDb = {
-  getAll: () => getItems<Member>("members"),
+  getAll: (limit?: number) => getItems<Member>("members", limit),
+  getAllUnlimited: () => getAllItems<Member>("members"),
   getById: (id: string) => {
-    const items = getItems<Member>("members");
+    const items = getAllItems<Member>("members");
     return items.find((item) => item.id === id);
   },
   getByEmail: (email: string) => {
-    const items = getItems<Member>("members");
+    const items = getAllItems<Member>("members");
     return items.find((item) => item.corporateEmail === email);
   },
   add: (item: Member) => addItem("members", item),
@@ -247,11 +266,11 @@ export const memberDb = {
     updateItem("members", id, updates),
   delete: (id: string) => deleteItem("members", id),
   getByAvailabilityStatus: (status: string) => {
-    const items = getItems<Member>("members");
+    const items = getAllItems<Member>("members");
     return items.filter((item) => item.availabilityStatus === status);
   },
   getByCategory: (category: string) => {
-    const items = getItems<Member>("members");
+    const items = getAllItems<Member>("members");
     return items.filter((item) => item.category === category);
   },
 };

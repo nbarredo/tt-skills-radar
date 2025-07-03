@@ -32,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
   skillDb,
@@ -46,6 +46,8 @@ export function Skills() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [knowledgeAreas, setKnowledgeAreas] = useState<KnowledgeArea[]>([]);
   const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [formData, setFormData] = useState({
@@ -60,10 +62,27 @@ export function Skills() {
     loadData();
   }, []);
 
-  const loadData = () => {
-    setSkills(skillDb.getAll());
-    setKnowledgeAreas(knowledgeAreaDb.getAll());
-    setSkillCategories(skillCategoryDb.getAll());
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      // Load limited data by default to prevent hangs
+      const skillData = showAll
+        ? skillDb.getAllUnlimited()
+        : skillDb.getAll(100);
+      setSkills(skillData);
+      setKnowledgeAreas(knowledgeAreaDb.getAll());
+      setSkillCategories(skillCategoryDb.getAll());
+    } catch (error) {
+      console.error("Error loading data:", error);
+      toast.error("Failed to load skills data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleShowAll = () => {
+    setShowAll(true);
+    loadData();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -137,6 +156,31 @@ export function Skills() {
     return category?.name || "Unknown";
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Skills</h1>
+            <p className="text-muted-foreground">Loading skills...</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="p-8">
+            <div className="flex items-center justify-center">
+              <RefreshCw className="animate-spin h-8 w-8 mr-2" />
+              <span>Loading skills...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const totalSkills = showAll
+    ? skills.length
+    : skillDb.getAllUnlimited().length;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -157,7 +201,19 @@ export function Skills() {
         <CardHeader>
           <CardTitle>All Skills</CardTitle>
           <CardDescription>
-            {skills.length} skill{skills.length !== 1 ? "s" : ""} defined
+            Showing {skills.length} of {totalSkills} skills
+            {!showAll && totalSkills > 100 && (
+              <>
+                {" "}
+                <Button
+                  variant="link"
+                  onClick={handleShowAll}
+                  className="p-0 h-auto text-primary"
+                >
+                  (Show all {totalSkills} skills)
+                </Button>
+              </>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>

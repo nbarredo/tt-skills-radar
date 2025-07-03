@@ -423,25 +423,440 @@
           margin-left: 2rem;
         }
       }
+
+      .architecture-diagram {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin: 1rem 0;
+      }
+
+      .architecture-layer {
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .architecture-layer h4 {
+        color: hsl(var(--primary));
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+      }
+
+      .architecture-boxes {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .arch-box {
+        background: hsl(var(--secondary));
+        color: hsl(var(--secondary-foreground));
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius);
+        border: 1px solid hsl(var(--border));
+        font-size: 0.875rem;
+        font-weight: 500;
+        min-width: 120px;
+        text-align: center;
+      }
+
+      .arch-box.primary {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        font-weight: 600;
+      }
+
+      .arrow-down {
+        font-size: 1.5rem;
+        color: hsl(var(--primary));
+        margin: 0.5rem 0;
+      }
+
+      @media (max-width: 768px) {
+        .architecture-boxes {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .arch-box {
+          min-width: 200px;
+        }
+      }
+
+      .workflow-diagram {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin: 1rem 0;
+        text-align: center;
+      }
+
+      .workflow-step {
+        display: inline-flex;
+        align-items: center;
+        background: hsl(var(--secondary));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin: 0.5rem;
+        max-width: 300px;
+      }
+
+      .workflow-step.small {
+        max-width: 200px;
+        padding: 0.75rem;
+      }
+
+      .workflow-step.success {
+        background: hsl(142 76% 36%);
+        color: white;
+      }
+
+      .step-number {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1rem;
+        flex-shrink: 0;
+      }
+
+      .step-content h4,
+      .step-content h5 {
+        margin: 0 0 0.25rem 0;
+        color: hsl(var(--foreground));
+      }
+
+      .step-content p {
+        margin: 0;
+        font-size: 0.875rem;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .workflow-arrow {
+        font-size: 1.5rem;
+        color: hsl(var(--primary));
+        margin: 0.5rem 0;
+      }
+
+      .workflow-branches {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: 1rem 0;
+      }
+
+      .workflow-branch {
+        flex: 1;
+        min-width: 180px;
+        max-width: 220px;
+      }
+
+      @media (max-width: 768px) {
+        .workflow-branches {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .workflow-branch {
+          width: 100%;
+          max-width: 280px;
+        }
+      }
+
+      .hierarchy-diagram {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin: 1rem 0;
+        text-align: center;
+      }
+
+      .hierarchy-level {
+        margin-bottom: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .hierarchy-node {
+        background: hsl(var(--secondary));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        min-width: 200px;
+        max-width: 250px;
+      }
+
+      .hierarchy-node.root {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        font-weight: bold;
+        min-width: 300px;
+      }
+
+      .hierarchy-node h4,
+      .hierarchy-node h5 {
+        margin: 0 0 1rem 0;
+        color: hsl(var(--foreground));
+      }
+
+      .hierarchy-node.root h4 {
+        color: hsl(var(--primary-foreground));
+      }
+
+      .sub-nodes {
+        margin-bottom: 1rem;
+      }
+
+      .sub-node {
+        background: hsl(var(--muted));
+        color: hsl(var(--muted-foreground));
+        padding: 0.25rem 0.5rem;
+        border-radius: calc(var(--radius) - 2px);
+        font-size: 0.8rem;
+        margin: 0.25rem 0;
+        border: 1px solid hsl(var(--border));
+      }
+
+      .skill-examples {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        justify-content: center;
+      }
+
+      .skill-tag {
+        background: hsl(var(--accent));
+        color: hsl(var(--accent-foreground));
+        padding: 0.2rem 0.5rem;
+        border-radius: calc(var(--radius) - 2px);
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+
+      @media (max-width: 768px) {
+        .hierarchy-level {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .hierarchy-node {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+
+      .process-flow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin: 1rem 0;
+      }
+
+      .process-step {
+        background: hsl(var(--secondary));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1rem;
+        text-align: center;
+        min-width: 140px;
+        max-width: 160px;
+      }
+
+      .process-step.success {
+        background: hsl(142 76% 36%);
+        color: white;
+      }
+
+      .process-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .process-step h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.9rem;
+        color: hsl(var(--foreground));
+      }
+
+      .process-step.success h4 {
+        color: white;
+      }
+
+      .process-step p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        line-height: 1.3;
+      }
+
+      .process-step.success p {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .process-arrow {
+        font-size: 1.2rem;
+        color: hsl(var(--primary));
+        font-weight: bold;
+        margin: 0 0.25rem;
+      }
+
+      @media (max-width: 768px) {
+        .process-flow {
+          flex-direction: column;
+        }
+
+        .process-arrow {
+          transform: rotate(90deg);
+          margin: 0.5rem 0;
+        }
+
+        .process-step {
+          width: 100%;
+          max-width: 250px;
+        }
+      }
+
+      .ai-workflow {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin: 1rem 0;
+      }
+
+      .workflow-main {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .ai-step {
+        background: hsl(var(--secondary));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1rem;
+        text-align: center;
+        min-width: 130px;
+        max-width: 150px;
+      }
+
+      .ai-step.success {
+        background: hsl(142 76% 36%);
+        color: white;
+      }
+
+      .ai-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .ai-step h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.85rem;
+        color: hsl(var(--foreground));
+      }
+
+      .ai-step.success h4 {
+        color: white;
+      }
+
+      .ai-step p {
+        margin: 0;
+        font-size: 0.7rem;
+        color: hsl(var(--muted-foreground));
+        line-height: 1.3;
+      }
+
+      .ai-step.success p {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .ai-arrow {
+        font-size: 1.2rem;
+        color: hsl(var(--primary));
+        font-weight: bold;
+        margin: 0 0.25rem;
+      }
+
+      .optimization-box {
+        background: hsl(var(--muted));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        text-align: center;
+      }
+
+      .optimization-box h5 {
+        margin: 0 0 1rem 0;
+        color: hsl(var(--foreground));
+      }
+
+      .optimization-features {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .opt-feature {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: hsl(var(--secondary));
+        padding: 0.5rem 1rem;
+        border-radius: calc(var(--radius) - 2px);
+        font-size: 0.8rem;
+        color: hsl(var(--foreground));
+      }
+
+      .opt-icon {
+        font-size: 1rem;
+      }
+
+      @media (max-width: 768px) {
+        .workflow-main {
+          flex-direction: column;
+        }
+
+        .ai-arrow {
+          transform: rotate(90deg);
+          margin: 0.5rem 0;
+        }
+
+        .ai-step {
+          width: 100%;
+          max-width: 250px;
+        }
+
+        .optimization-features {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
-    <script>
-      mermaid.initialize({
-        startOnLoad: true,
-        theme: "base",
-        themeVariables: {
-          primaryColor: "#bb2528",
-          primaryTextColor: "#ffffff",
-          primaryBorderColor: "#bb2528",
-          lineColor: "#ffffff",
-          secondaryColor: "#ffffff",
-          tertiaryColor: "#ffffff",
-          background: "#1a1a1a",
-          mainBkg: "#2a2a2a",
-          secondBkg: "#2a2a2a",
-        },
-      });
-    </script>
   </head>
   <body>
     <div class="documentation-layout">
@@ -649,17 +1064,51 @@
             </div>
 
             <h3>System Architecture</h3>
-            <div class="mermaid">
-              graph TB subgraph "User Interface" A[Dashboard] B[Members]
-              C[Skills] D[Clients] E[Assignments] end subgraph "AI Layer"
-              F[Gemini AI] G[Sales Insights] H[Solutions Insights] I[People
-              Insights] J[Production Insights] end subgraph "Data Management"
-              K[Smart Import] L[Excel Import] M[Data Validation] N[Duplicate
-              Detection] end subgraph "Data Storage" O[Members Data] P[Skills
-              Data] Q[Clients Data] R[Assignments Data] end A --> O B --> O C
-              --> P D --> Q E --> R F --> G F --> H F --> I F --> J G --> O H
-              --> P I --> O J --> R K --> M L --> M M --> N N --> O N --> P N
-              --> Q N --> R
+            <div class="architecture-diagram">
+              <div class="architecture-layer">
+                <h4>🖥️ User Interface Layer</h4>
+                <div class="architecture-boxes">
+                  <div class="arch-box">Dashboard</div>
+                  <div class="arch-box">Members</div>
+                  <div class="arch-box">Skills</div>
+                  <div class="arch-box">Clients</div>
+                  <div class="arch-box">Assignments</div>
+                </div>
+                <div class="arrow-down">↓</div>
+              </div>
+
+              <div class="architecture-layer">
+                <h4>🤖 AI Layer</h4>
+                <div class="architecture-boxes">
+                  <div class="arch-box primary">Gemini AI</div>
+                  <div class="arch-box">Sales Insights</div>
+                  <div class="arch-box">Solutions Insights</div>
+                  <div class="arch-box">People Insights</div>
+                  <div class="arch-box">Production Insights</div>
+                </div>
+                <div class="arrow-down">↓</div>
+              </div>
+
+              <div class="architecture-layer">
+                <h4>⚙️ Data Management Layer</h4>
+                <div class="architecture-boxes">
+                  <div class="arch-box">Smart Import</div>
+                  <div class="arch-box">Excel Import</div>
+                  <div class="arch-box">Data Validation</div>
+                  <div class="arch-box">Duplicate Detection</div>
+                </div>
+                <div class="arrow-down">↓</div>
+              </div>
+
+              <div class="architecture-layer">
+                <h4>💾 Data Storage Layer</h4>
+                <div class="architecture-boxes">
+                  <div class="arch-box">Members Data</div>
+                  <div class="arch-box">Skills Data</div>
+                  <div class="arch-box">Clients Data</div>
+                  <div class="arch-box">Assignments Data</div>
+                </div>
+              </div>
             </div>
 
             <div class="feature-grid">
@@ -921,13 +1370,167 @@
             </div>
 
             <h3>Profile Management Workflow</h3>
-            <div class="mermaid">
-              graph TD A[Member Profile] --> B[Edit Profile] B --> C[Basic Info]
-              B --> D[Skills Section] B --> E[Experience] B --> F[Career Goals]
-              D --> G[Select Skills] G --> H[Set Proficiency] H --> I[Assessment
-              Date] C --> J[Save Changes] E --> J F --> J I --> J J --> K[Update
-              Database] K --> L[Profile Updated]
+            <div class="workflow-diagram">
+              <div class="workflow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                  <h4>Member Profile</h4>
+                  <p>View existing profile information</p>
+                </div>
+              </div>
+              <div class="workflow-arrow">↓</div>
+
+              <div class="workflow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                  <h4>Edit Profile</h4>
+                  <p>Click edit button to modify profile</p>
+                </div>
+              </div>
+              <div class="workflow-arrow">↓</div>
+
+              <div class="workflow-branches">
+                <div class="workflow-branch">
+                  <div class="workflow-step small">
+                    <div class="step-content">
+                      <h5>Basic Info</h5>
+                      <p>Name, email, location</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="workflow-branch">
+                  <div class="workflow-step small">
+                    <div class="step-content">
+                      <h5>Skills Section</h5>
+                      <p>Add/edit technical skills</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="workflow-branch">
+                  <div class="workflow-step small">
+                    <div class="step-content">
+                      <h5>Experience</h5>
+                      <p>Work history & projects</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="workflow-branch">
+                  <div class="workflow-step small">
+                    <div class="step-content">
+                      <h5>Career Goals</h5>
+                      <p>Development plans</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="workflow-arrow">↓</div>
+
+              <div class="workflow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                  <h4>Save Changes</h4>
+                  <p>Update database with new information</p>
+                </div>
+              </div>
+              <div class="workflow-arrow">↓</div>
+
+              <div class="workflow-step success">
+                <div class="step-content">
+                  <h4>✅ Profile Updated</h4>
+                  <p>Changes saved successfully</p>
+                </div>
+              </div>
             </div>
+
+            <style>
+              .workflow-diagram {
+                background: hsl(var(--card));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                padding: 2rem;
+                margin: 1rem 0;
+                text-align: center;
+              }
+
+              .workflow-step {
+                display: inline-flex;
+                align-items: center;
+                background: hsl(var(--secondary));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                padding: 1rem;
+                margin: 0.5rem;
+                max-width: 300px;
+              }
+
+              .workflow-step.small {
+                max-width: 200px;
+                padding: 0.75rem;
+              }
+
+              .workflow-step.success {
+                background: hsl(142 76% 36%);
+                color: white;
+              }
+
+              .step-number {
+                background: hsl(var(--primary));
+                color: hsl(var(--primary-foreground));
+                border-radius: 50%;
+                width: 2rem;
+                height: 2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                margin-right: 1rem;
+                flex-shrink: 0;
+              }
+
+              .step-content h4,
+              .step-content h5 {
+                margin: 0 0 0.25rem 0;
+                color: hsl(var(--foreground));
+              }
+
+              .step-content p {
+                margin: 0;
+                font-size: 0.875rem;
+                color: hsl(var(--muted-foreground));
+              }
+
+              .workflow-arrow {
+                font-size: 1.5rem;
+                color: hsl(var(--primary));
+                margin: 0.5rem 0;
+              }
+
+              .workflow-branches {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+                margin: 1rem 0;
+              }
+
+              .workflow-branch {
+                flex: 1;
+                min-width: 180px;
+                max-width: 220px;
+              }
+
+              @media (max-width: 768px) {
+                .workflow-branches {
+                  flex-direction: column;
+                  align-items: center;
+                }
+
+                .workflow-branch {
+                  width: 100%;
+                  max-width: 280px;
+                }
+              }
+            </style>
 
             <h3>Skills Management in Profiles</h3>
             <ul>
@@ -990,18 +1593,154 @@
             </p>
 
             <h3>Skill Hierarchy</h3>
-            <div class="mermaid">
-              graph TD A[Knowledge Areas] --> B[Technologies] A --> C[Cloud
-              Platforms] A --> D[Data Analytics] A --> E[Business Skills] B -->
-              F[Programming Languages] B --> G[Frameworks Libraries] C -->
-              H[Infrastructure] C --> I[Services] D --> J[Analytics Tools] D -->
-              K[Data Processing] E --> L[Methodologies] E --> M[Soft Skills] F
-              --> N[React] F --> O[Python] F --> P[JavaScript] G --> Q[Node.js]
-              G --> R[Express] H --> S[EC2] H --> T[S3] I --> U[Lambda] I -->
-              V[RDS] J --> W[Tableau] J --> X[Power BI] K --> Y[Spark] K -->
-              Z[Kafka] L --> AA[Agile] L --> AB[Scrum] M --> AC[Leadership] M
-              --> AD[Communication]
+            <div class="hierarchy-diagram">
+              <div class="hierarchy-level">
+                <div class="hierarchy-node root">
+                  <h4>🎯 Knowledge Areas</h4>
+                </div>
+              </div>
+
+              <div class="hierarchy-level">
+                <div class="hierarchy-node">
+                  <h5>💻 Technologies</h5>
+                  <div class="sub-nodes">
+                    <div class="sub-node">Programming Languages</div>
+                    <div class="sub-node">Frameworks & Libraries</div>
+                  </div>
+                  <div class="skill-examples">
+                    <span class="skill-tag">React</span>
+                    <span class="skill-tag">Python</span>
+                    <span class="skill-tag">Node.js</span>
+                  </div>
+                </div>
+
+                <div class="hierarchy-node">
+                  <h5>☁️ Cloud Platforms</h5>
+                  <div class="sub-nodes">
+                    <div class="sub-node">Infrastructure</div>
+                    <div class="sub-node">Services</div>
+                  </div>
+                  <div class="skill-examples">
+                    <span class="skill-tag">AWS EC2</span>
+                    <span class="skill-tag">Lambda</span>
+                    <span class="skill-tag">S3</span>
+                  </div>
+                </div>
+
+                <div class="hierarchy-node">
+                  <h5>📊 Data Analytics</h5>
+                  <div class="sub-nodes">
+                    <div class="sub-node">Analytics Tools</div>
+                    <div class="sub-node">Data Processing</div>
+                  </div>
+                  <div class="skill-examples">
+                    <span class="skill-tag">Tableau</span>
+                    <span class="skill-tag">Spark</span>
+                    <span class="skill-tag">Power BI</span>
+                  </div>
+                </div>
+
+                <div class="hierarchy-node">
+                  <h5>💼 Business Skills</h5>
+                  <div class="sub-nodes">
+                    <div class="sub-node">Methodologies</div>
+                    <div class="sub-node">Soft Skills</div>
+                  </div>
+                  <div class="skill-examples">
+                    <span class="skill-tag">Agile</span>
+                    <span class="skill-tag">Leadership</span>
+                    <span class="skill-tag">Scrum</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <style>
+              .hierarchy-diagram {
+                background: hsl(var(--card));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                padding: 2rem;
+                margin: 1rem 0;
+                text-align: center;
+              }
+
+              .hierarchy-level {
+                margin-bottom: 2rem;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+              }
+
+              .hierarchy-node {
+                background: hsl(var(--secondary));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                padding: 1.5rem;
+                min-width: 200px;
+                max-width: 250px;
+              }
+
+              .hierarchy-node.root {
+                background: hsl(var(--primary));
+                color: hsl(var(--primary-foreground));
+                font-weight: bold;
+                min-width: 300px;
+              }
+
+              .hierarchy-node h4,
+              .hierarchy-node h5 {
+                margin: 0 0 1rem 0;
+                color: hsl(var(--foreground));
+              }
+
+              .hierarchy-node.root h4 {
+                color: hsl(var(--primary-foreground));
+              }
+
+              .sub-nodes {
+                margin-bottom: 1rem;
+              }
+
+              .sub-node {
+                background: hsl(var(--muted));
+                color: hsl(var(--muted-foreground));
+                padding: 0.25rem 0.5rem;
+                border-radius: calc(var(--radius) - 2px);
+                font-size: 0.8rem;
+                margin: 0.25rem 0;
+                border: 1px solid hsl(var(--border));
+              }
+
+              .skill-examples {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.25rem;
+                justify-content: center;
+              }
+
+              .skill-tag {
+                background: hsl(var(--accent));
+                color: hsl(var(--accent-foreground));
+                padding: 0.2rem 0.5rem;
+                border-radius: calc(var(--radius) - 2px);
+                font-size: 0.75rem;
+                font-weight: 500;
+              }
+
+              @media (max-width: 768px) {
+                .hierarchy-level {
+                  flex-direction: column;
+                  align-items: center;
+                }
+
+                .hierarchy-node {
+                  width: 100%;
+                  max-width: 300px;
+                }
+              }
+            </style>
 
             <h3>Creating Skills</h3>
             <ol class="step-list">
@@ -1220,38 +1959,148 @@
             </p>
 
             <h3>Import Process</h3>
-            <div class="mermaid">
-              flowchart TD A[Upload File] --> B[AI Analysis] B --> C[Entity
-              Detection] C --> D[Field Mapping] D --> E[Confidence Scoring] E
-              --> F[Duplicate Detection] F --> G[Data Preview] G --> H[Record
-              Confirmation] H --> I[Import Execution] I --> J[Success Report]
+            <div class="process-flow">
+              <div class="process-step">
+                <div class="process-icon">📁</div>
+                <h4>Upload File</h4>
+                <p>Select JSON, CSV, Excel, or text files</p>
+              </div>
+              <div class="process-arrow">→</div>
+
+              <div class="process-step">
+                <div class="process-icon">🤖</div>
+                <h4>AI Analysis</h4>
+                <p>System analyzes structure and detects entity types</p>
+              </div>
+              <div class="process-arrow">→</div>
+
+              <div class="process-step">
+                <div class="process-icon">🎯</div>
+                <h4>Entity Detection</h4>
+                <p>Identifies data type (Members, Skills, Clients)</p>
+              </div>
+              <div class="process-arrow">→</div>
+
+              <div class="process-step">
+                <div class="process-icon">🗺️</div>
+                <h4>Field Mapping</h4>
+                <p>Maps data fields to system properties</p>
+              </div>
+              <div class="process-arrow">→</div>
+
+              <div class="process-step">
+                <div class="process-icon">🔍</div>
+                <h4>Duplicate Detection</h4>
+                <p>Identifies existing records to prevent duplicates</p>
+              </div>
+              <div class="process-arrow">→</div>
+
+              <div class="process-step">
+                <div class="process-icon">👀</div>
+                <h4>Data Preview</h4>
+                <p>Review mapped data before import</p>
+              </div>
+              <div class="process-arrow">→</div>
+
+              <div class="process-step">
+                <div class="process-icon">✅</div>
+                <h4>Record Confirmation</h4>
+                <p>Select which records to import</p>
+              </div>
+              <div class="process-arrow">→</div>
+
+              <div class="process-step">
+                <div class="process-icon">⚡</div>
+                <h4>Import Execution</h4>
+                <p>Complete the import process</p>
+              </div>
+              <div class="process-arrow">→</div>
+
+              <div class="process-step success">
+                <div class="process-icon">📊</div>
+                <h4>Success Report</h4>
+                <p>View import results and statistics</p>
+              </div>
             </div>
 
-            <ol class="step-list">
-              <li>
-                <strong>Upload File:</strong> Select JSON, CSV, Excel, or text
-                files
-              </li>
-              <li>
-                <strong>AI Analysis:</strong> System analyzes structure and
-                detects entity types
-              </li>
-              <li>
-                <strong>Field Mapping:</strong> Review AI-suggested field
-                mappings
-              </li>
-              <li>
-                <strong>Duplicate Detection:</strong> AI identifies existing
-                records to prevent duplicates
-              </li>
-              <li>
-                <strong>Record Confirmation:</strong> Select which records to
-                import
-              </li>
-              <li>
-                <strong>Import Execution:</strong> Complete the import process
-              </li>
-            </ol>
+            <style>
+              .process-flow {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                background: hsl(var(--card));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                padding: 2rem;
+                margin: 1rem 0;
+              }
+
+              .process-step {
+                background: hsl(var(--secondary));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                padding: 1rem;
+                text-align: center;
+                min-width: 140px;
+                max-width: 160px;
+              }
+
+              .process-step.success {
+                background: hsl(142 76% 36%);
+                color: white;
+              }
+
+              .process-icon {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+              }
+
+              .process-step h4 {
+                margin: 0 0 0.5rem 0;
+                font-size: 0.9rem;
+                color: hsl(var(--foreground));
+              }
+
+              .process-step.success h4 {
+                color: white;
+              }
+
+              .process-step p {
+                margin: 0;
+                font-size: 0.75rem;
+                color: hsl(var(--muted-foreground));
+                line-height: 1.3;
+              }
+
+              .process-step.success p {
+                color: rgba(255, 255, 255, 0.9);
+              }
+
+              .process-arrow {
+                font-size: 1.2rem;
+                color: hsl(var(--primary));
+                font-weight: bold;
+                margin: 0 0.25rem;
+              }
+
+              @media (max-width: 768px) {
+                .process-flow {
+                  flex-direction: column;
+                }
+
+                .process-arrow {
+                  transform: rotate(90deg);
+                  margin: 0.5rem 0;
+                }
+
+                .process-step {
+                  width: 100%;
+                  max-width: 250px;
+                }
+              }
+            </style>
 
             <h3>Supported Formats</h3>
             <ul>
@@ -1338,12 +2187,191 @@
             </div>
 
             <h3>AI Insights Workflow</h3>
-            <div class="mermaid">
-              graph LR A[User Query] --> B[Context Manager] B --> C[Team Data] C
-              --> D[Gemini AI] D --> E[Business Context] E --> F[Intelligent
-              Response] subgraph "Context Optimization" G[Session Cache] H[Auto
-              Refresh] I[Usage Tracking] end B --> G G --> H H --> B B --> I
+            <div class="ai-workflow">
+              <div class="workflow-main">
+                <div class="ai-step">
+                  <div class="ai-icon">❓</div>
+                  <h4>User Query</h4>
+                  <p>Ask about team, skills, or business insights</p>
+                </div>
+                <div class="ai-arrow">→</div>
+
+                <div class="ai-step">
+                  <div class="ai-icon">🧠</div>
+                  <h4>Context Manager</h4>
+                  <p>Loads relevant team data and context</p>
+                </div>
+                <div class="ai-arrow">→</div>
+
+                <div class="ai-step">
+                  <div class="ai-icon">📊</div>
+                  <h4>Team Data</h4>
+                  <p>Access to members, skills, and assignments</p>
+                </div>
+                <div class="ai-arrow">→</div>
+
+                <div class="ai-step">
+                  <div class="ai-icon">🤖</div>
+                  <h4>Gemini AI</h4>
+                  <p>Processes query with business context</p>
+                </div>
+                <div class="ai-arrow">→</div>
+
+                <div class="ai-step">
+                  <div class="ai-icon">💼</div>
+                  <h4>Business Context</h4>
+                  <p>Applies domain knowledge and insights</p>
+                </div>
+                <div class="ai-arrow">→</div>
+
+                <div class="ai-step success">
+                  <div class="ai-icon">💡</div>
+                  <h4>Intelligent Response</h4>
+                  <p>Actionable insights and recommendations</p>
+                </div>
+              </div>
+
+              <div class="optimization-box">
+                <h5>🚀 Context Optimization</h5>
+                <div class="optimization-features">
+                  <div class="opt-feature">
+                    <span class="opt-icon">💾</span>
+                    <span>Session Cache</span>
+                  </div>
+                  <div class="opt-feature">
+                    <span class="opt-icon">🔄</span>
+                    <span>Auto Refresh</span>
+                  </div>
+                  <div class="opt-feature">
+                    <span class="opt-icon">📈</span>
+                    <span>Usage Tracking</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <style>
+              .ai-workflow {
+                background: hsl(var(--card));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                padding: 2rem;
+                margin: 1rem 0;
+              }
+
+              .workflow-main {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                margin-bottom: 2rem;
+              }
+
+              .ai-step {
+                background: hsl(var(--secondary));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                padding: 1rem;
+                text-align: center;
+                min-width: 130px;
+                max-width: 150px;
+              }
+
+              .ai-step.success {
+                background: hsl(142 76% 36%);
+                color: white;
+              }
+
+              .ai-icon {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+              }
+
+              .ai-step h4 {
+                margin: 0 0 0.5rem 0;
+                font-size: 0.85rem;
+                color: hsl(var(--foreground));
+              }
+
+              .ai-step.success h4 {
+                color: white;
+              }
+
+              .ai-step p {
+                margin: 0;
+                font-size: 0.7rem;
+                color: hsl(var(--muted-foreground));
+                line-height: 1.3;
+              }
+
+              .ai-step.success p {
+                color: rgba(255, 255, 255, 0.9);
+              }
+
+              .ai-arrow {
+                font-size: 1.2rem;
+                color: hsl(var(--primary));
+                font-weight: bold;
+                margin: 0 0.25rem;
+              }
+
+              .optimization-box {
+                background: hsl(var(--muted));
+                border: 1px solid hsl(var(--border));
+                border-radius: var(--radius);
+                padding: 1.5rem;
+                text-align: center;
+              }
+
+              .optimization-box h5 {
+                margin: 0 0 1rem 0;
+                color: hsl(var(--foreground));
+              }
+
+              .optimization-features {
+                display: flex;
+                justify-content: center;
+                gap: 1rem;
+                flex-wrap: wrap;
+              }
+
+              .opt-feature {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: hsl(var(--secondary));
+                padding: 0.5rem 1rem;
+                border-radius: calc(var(--radius) - 2px);
+                font-size: 0.8rem;
+                color: hsl(var(--foreground));
+              }
+
+              .opt-icon {
+                font-size: 1rem;
+              }
+
+              @media (max-width: 768px) {
+                .workflow-main {
+                  flex-direction: column;
+                }
+
+                .ai-arrow {
+                  transform: rotate(90deg);
+                  margin: 0.5rem 0;
+                }
+
+                .ai-step {
+                  width: 100%;
+                  max-width: 250px;
+                }
+
+                .optimization-features {
+                  flex-direction: column;
+                  align-items: center;
+                }
+              }
+            </style>
 
             <h3>Context-Aware Intelligence</h3>
             <p>

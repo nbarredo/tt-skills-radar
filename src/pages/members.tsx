@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
   memberDb,
@@ -45,6 +45,8 @@ import type { Member, MemberProfile } from "@/types";
 
 export function Members() {
   const [members, setMembers] = useState<Member[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [formData, setFormData] = useState({
@@ -62,8 +64,25 @@ export function Members() {
     loadMembers();
   }, []);
 
-  const loadMembers = () => {
-    setMembers(memberDb.getAll());
+  const loadMembers = async () => {
+    setIsLoading(true);
+    try {
+      // Load limited data by default to prevent hangs
+      const memberData = showAll
+        ? memberDb.getAllUnlimited()
+        : memberDb.getAll(100);
+      setMembers(memberData);
+    } catch (error) {
+      console.error("Error loading members:", error);
+      toast.error("Failed to load members");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleShowAll = () => {
+    setShowAll(true);
+    loadMembers();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -182,6 +201,31 @@ export function Members() {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Members</h1>
+            <p className="text-muted-foreground">Loading members...</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="p-8">
+            <div className="flex items-center justify-center">
+              <RefreshCw className="animate-spin h-8 w-8 mr-2" />
+              <span>Loading members...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const totalMembers = showAll
+    ? members.length
+    : memberDb.getAllUnlimited().length;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -201,7 +245,19 @@ export function Members() {
         <CardHeader>
           <CardTitle>All Members</CardTitle>
           <CardDescription>
-            {members.length} member{members.length !== 1 ? "s" : ""} registered
+            Showing {members.length} of {totalMembers} members
+            {!showAll && totalMembers > 100 && (
+              <>
+                {" "}
+                <Button
+                  variant="link"
+                  onClick={handleShowAll}
+                  className="p-0 h-auto text-primary"
+                >
+                  (Show all {totalMembers} members)
+                </Button>
+              </>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>

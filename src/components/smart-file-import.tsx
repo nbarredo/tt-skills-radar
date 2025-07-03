@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -364,7 +365,7 @@ export function SmartFileImport({
         existingData = await response.json();
       }
     } catch (error) {
-      console.log("Could not load existing database for comparison");
+      console.error("Could not load existing database for comparison", error);
     }
 
     // Compress existing data for AI analysis (sample to avoid token limits)
@@ -470,7 +471,17 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
 
     try {
       const { geminiChatService } = await import("@/lib/gemini");
-      const response = await geminiChatService.sendMessage(prompt);
+
+      // Add timeout wrapper for AI call
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(
+          () => reject(new Error("AI analysis timeout after 30 seconds")),
+          30000
+        );
+      });
+
+      const aiPromise = geminiChatService.sendMessage(prompt);
+      const response = await Promise.race([aiPromise, timeoutPromise]);
 
       // Clean the response by removing markdown formatting if present
       let cleanResponse = response.trim();
@@ -509,13 +520,66 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
       };
     } catch (error) {
       console.error("AI analysis failed:", error);
+
+      // Provide fallback analysis when AI fails
+      const fallbackMappings: MappingSuggestion[] = [];
+      const firstRecord = data[0] || {};
+
+      // Basic field mapping heuristics as fallback
+      Object.keys(firstRecord).forEach((field) => {
+        const fieldLower = field.toLowerCase();
+        if (fieldLower.includes("name") || fieldLower.includes("full")) {
+          fallbackMappings.push({
+            sourceField: field,
+            targetEntity: "Members",
+            targetField: "fullName",
+            confidence: 0.7,
+            reasoning: "Field appears to contain names",
+            sampleValues: data
+              .slice(0, 3)
+              .map((r) => r[field])
+              .filter(Boolean),
+          });
+        } else if (fieldLower.includes("email")) {
+          fallbackMappings.push({
+            sourceField: field,
+            targetEntity: "Members",
+            targetField: "corporateEmail",
+            confidence: 0.8,
+            reasoning: "Field appears to contain email addresses",
+            sampleValues: data
+              .slice(0, 3)
+              .map((r) => r[field])
+              .filter(Boolean),
+          });
+        } else if (fieldLower.includes("skill")) {
+          fallbackMappings.push({
+            sourceField: field,
+            targetEntity: "Skills",
+            targetField: "name",
+            confidence: 0.7,
+            reasoning: "Field appears to contain skill names",
+            sampleValues: data
+              .slice(0, 3)
+              .map((r) => r[field])
+              .filter(Boolean),
+          });
+        }
+      });
+
       return {
-        analysis: "AI analysis failed. Please review the data manually.",
-        mappings: [],
+        analysis: `AI analysis failed (${
+          error instanceof Error ? error.message : "Unknown error"
+        }). Using fallback field detection. Found ${data.length} records with ${
+          Object.keys(firstRecord).length
+        } fields.`,
+        mappings: fallbackMappings,
         errors: [
-          "Could not perform AI analysis: " +
-            (error instanceof Error ? error.message : "Unknown error"),
+          "AI analysis unavailable - using basic field detection",
+          "Please review field mappings manually",
         ],
+        duplicateCount: 0,
+        duplicateMatches: [],
       };
     }
   };
@@ -583,27 +647,46 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
       // Add IDs to records that don't have them
       const dataWithIds = addMissingIds(data, primaryEntity);
 
-      const records: ImportRecord[] = dataWithIds.map((record, index) => {
-        // Check if this record was identified as a duplicate by AI
-        const recordName =
-          record.name || record.skill_name || record.email || record.fullName;
+      // Process records in batches to avoid blocking the UI
+      const batchSize = 100;
+      const records: ImportRecord[] = [];
 
-        const duplicateMatch = duplicateMatches.find((match) => {
-          return recordName && match.uploadField === recordName;
+      for (let i = 0; i < dataWithIds.length; i += batchSize) {
+        const batch = dataWithIds.slice(i, i + batchSize);
+
+        const batchRecords: ImportRecord[] = batch.map((record, batchIndex) => {
+          const index = i + batchIndex;
+          // Check if this record was identified as a duplicate by AI
+          const recordName =
+            record.name || record.skill_name || record.email || record.fullName;
+
+          const duplicateMatch = duplicateMatches.find((match) => {
+            return recordName && match.uploadField === recordName;
+          });
+
+          return {
+            id: `record-${index}`,
+            originalData: record,
+            transformedData: {},
+            isSelected: true, // Default to selected
+            hasChanges: !duplicateMatch,
+            changeType: duplicateMatch ? ("update" as const) : ("new" as const),
+            conflictFields: [],
+          } as ImportRecord;
         });
 
-        return {
-          id: `record-${index}`,
-          originalData: record,
-          transformedData: {},
-          isSelected: true, // Default to selected
-          hasChanges: !duplicateMatch,
-          changeType: duplicateMatch ? "update" : "new",
-          conflictFields: [],
-        };
-      });
+        records.push(...batchRecords);
+
+        // Allow UI to update between batches
+        if (i + batchSize < dataWithIds.length) {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      }
 
       setImportRecords(records);
+    } catch (error) {
+      console.error("Error preparing import records:", error);
+      setImportRecords([]);
     } finally {
       setIsPreparingRecords(false);
     }
@@ -747,28 +830,65 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
         (record) => record.isSelected
       );
 
-      const transformedData = selectedRecords.map((record) => {
-        const transformed: any = {};
+      if (selectedRecords.length === 0) {
+        errors.push("No records selected for import");
+        setImportResults({ success: 0, errors });
+        return;
+      }
 
-        Object.entries(selectedMappings).forEach(([sourceField, mapping]) => {
-          const value = record.originalData[sourceField];
-          transformed[mapping.targetField] = value;
+      // Transform data in batches to avoid blocking UI
+      const batchSize = 50;
+      const transformedData: any[] = [];
+
+      for (let i = 0; i < selectedRecords.length; i += batchSize) {
+        const batch = selectedRecords.slice(i, i + batchSize);
+
+        const batchTransformed = batch.map((record) => {
+          const transformed: any = { ...record.originalData }; // Start with original data
+
+          // Apply field mappings
+          Object.entries(selectedMappings).forEach(([sourceField, mapping]) => {
+            const value = record.originalData[sourceField];
+            if (value !== undefined && value !== null) {
+              transformed[mapping.targetField] = value;
+            }
+          });
+
+          return transformed;
         });
 
-        return transformed;
-      });
+        transformedData.push(...batchTransformed);
+
+        // Allow UI to update between batches
+        if (i + batchSize < selectedRecords.length) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      }
 
       // Import the transformed data
       const primaryEntity =
         uploadResult.mappingSuggestions?.[0]?.targetEntity || "Members";
 
       if (onImportComplete) {
-        onImportComplete(transformedData, primaryEntity);
+        try {
+          await Promise.resolve(
+            onImportComplete(transformedData, primaryEntity)
+          );
+        } catch (importError) {
+          throw new Error(
+            `Import callback failed: ${
+              importError instanceof Error
+                ? importError.message
+                : "Unknown error"
+            }`
+          );
+        }
       }
 
       successCount = transformedData.length;
       setImportResults({ success: successCount, errors });
     } catch (error) {
+      console.error("Import error:", error);
       errors.push(error instanceof Error ? error.message : "Import failed");
       setImportResults({ success: successCount, errors });
     } finally {
@@ -1198,10 +1318,27 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
                     <CheckCircle className="h-4 w-4 animate-spin" />
                   </div>
                   <Progress value={100} className="animate-pulse" />
+                  <div className="text-xs text-muted-foreground text-center">
+                    Processing in batches to avoid UI freezing
+                  </div>
                 </div>
               )}
 
-              {!isPreparingRecords && (
+              {!isPreparingRecords && importRecords.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                  <p>
+                    No records to confirm. Please complete the field mapping
+                    first.
+                  </p>
+                  <p className="text-xs mt-1">
+                    Make sure you have selected field mappings in the Field
+                    Mapping tab.
+                  </p>
+                </div>
+              )}
+
+              {!isPreparingRecords && importRecords.length > 0 && (
                 <>
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-sm text-muted-foreground">
@@ -1228,7 +1365,17 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
                   </div>
 
                   <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {importRecords.map((record) => (
+                    {importRecords.length > 100 && (
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Large dataset detected ({importRecords.length}{" "}
+                          records). Showing first 100 records for performance.
+                          Use filters to narrow down your selection.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    {importRecords.slice(0, 100).map((record) => (
                       <div
                         key={record.id}
                         className={cn(
@@ -1330,10 +1477,11 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
                     ))}
                   </div>
 
-                  {importRecords.length === 0 && (
-                    <div className="text-center text-muted-foreground py-8">
-                      No records to confirm. Please complete the field mapping
-                      first.
+                  {importRecords.length > 100 && (
+                    <div className="text-xs text-muted-foreground text-center mt-2">
+                      Showing 100 of {importRecords.length} records. All{" "}
+                      {importRecords.filter((r) => r.isSelected).length}{" "}
+                      selected records will be imported.
                     </div>
                   )}
                 </>
@@ -1350,6 +1498,9 @@ IMPORTANT: Respond with ONLY the JSON object below, no markdown formatting, no c
                     <CheckCircle className="h-4 w-4 animate-spin" />
                   </div>
                   <Progress value={100} className="animate-pulse" />
+                  <div className="text-xs text-muted-foreground text-center">
+                    Please wait while we process your data in batches...
+                  </div>
                 </div>
               )}
 

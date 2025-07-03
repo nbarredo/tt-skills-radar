@@ -35,189 +35,181 @@ export function ImportsPage() {
       let updated = 0;
       let errors = 0;
 
-      // Cache database data once at the beginning to avoid repeated queries
-      console.log("Caching database data...");
-      const existingMembers = memberDb.getAllUnlimited();
-      const existingClients = clientDb.getAll();
-      const existingSkills = skillDb.getAllUnlimited();
-      console.log("Database caching complete");
+      // Process in batches to avoid UI hanging
+      const batchSize = 50;
+      const totalBatches = Math.ceil(data.length / batchSize);
 
-      // Process records using requestIdleCallback for true non-blocking execution
-      await new Promise<void>((resolve) => {
-        let currentIndex = 0;
+      for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+        const startIndex = batchIndex * batchSize;
+        const endIndex = Math.min(startIndex + batchSize, data.length);
+        const batch = data.slice(startIndex, endIndex);
 
-        const processChunk = (deadline?: IdleDeadline) => {
-          // Process records while we have time or in small chunks
-          const chunkSize = deadline
-            ? deadline.timeRemaining() > 5
-              ? 10
-              : 5
-            : 5;
-
-          const endIndex = Math.min(currentIndex + chunkSize, data.length);
-
-          for (let i = currentIndex; i < endIndex; i++) {
-            const record = data[i];
-
-            try {
-              switch (entity.toLowerCase()) {
-                case "members": {
-                  const existingMember = existingMembers.find(
+        // Process current batch
+        switch (entity.toLowerCase()) {
+          case "members":
+            for (const record of batch) {
+              try {
+                const existingMember = memberDb
+                  .getAll()
+                  .find(
                     (m) =>
                       m.corporateEmail === record.corporateEmail ||
                       m.fullName === record.fullName
                   );
 
-                  if (existingMember) {
-                    const updates: Partial<Member> = {};
-                    if (record.currentAssignedClient)
-                      updates.currentAssignedClient =
-                        record.currentAssignedClient;
-                    if (record.availabilityStatus)
-                      updates.availabilityStatus = record.availabilityStatus;
-                    if (record.location) updates.location = record.location;
-                    if (record.category) updates.category = record.category;
+                if (existingMember) {
+                  // Update existing member, including assignments
+                  const updates: Partial<Member> = {};
+                  if (record.currentAssignedClient)
+                    updates.currentAssignedClient =
+                      record.currentAssignedClient;
+                  if (record.availabilityStatus)
+                    updates.availabilityStatus = record.availabilityStatus;
+                  if (record.location) updates.location = record.location;
+                  if (record.category) updates.category = record.category;
 
-                    memberDb.update(existingMember.id, updates);
-                    updated++;
-                  } else {
-                    const newMember: Member = {
-                      id:
-                        record.id ||
-                        `member-${Date.now()}-${Math.random()
-                          .toString(36)
-                          .substr(2, 9)}`,
-                      fullName: record.fullName || record.name || "Unknown",
-                      corporateEmail:
-                        record.corporateEmail || record.email || "",
-                      hireDate:
-                        record.hireDate ||
-                        new Date().toISOString().split("T")[0],
-                      category: record.category || "Starter",
-                      location: record.location || "Remote",
-                      currentAssignedClient:
-                        record.currentAssignedClient || "Available",
-                      availabilityStatus:
-                        record.availabilityStatus || "Available",
-                    };
-                    memberDb.add(newMember);
-                    imported++;
-                  }
-                  break;
+                  memberDb.update(existingMember.id, updates);
+                  updated++;
+                } else {
+                  // Create new member
+                  const newMember: Member = {
+                    id:
+                      record.id ||
+                      `member-${Date.now()}-${Math.random()
+                        .toString(36)
+                        .substr(2, 9)}`,
+                    fullName: record.fullName || record.name || "Unknown",
+                    corporateEmail: record.corporateEmail || record.email || "",
+                    hireDate:
+                      record.hireDate || new Date().toISOString().split("T")[0],
+                    category: record.category || "Starter",
+                    location: record.location || "Remote",
+                    currentAssignedClient:
+                      record.currentAssignedClient || "Available",
+                    availabilityStatus:
+                      record.availabilityStatus || "Available",
+                  };
+                  memberDb.add(newMember);
+                  imported++;
                 }
+              } catch (err) {
+                console.error("Error importing member:", err);
+                errors++;
+              }
+            }
+            break;
 
-                case "clients": {
-                  const existingClient = existingClients.find(
+          case "clients":
+            for (const record of batch) {
+              try {
+                const existingClient = clientDb
+                  .getAll()
+                  .find(
                     (c) => c.name.toLowerCase() === record.name.toLowerCase()
                   );
 
-                  if (existingClient) {
-                    clientDb.update(existingClient.id, {
-                      description:
-                        record.description || existingClient.description,
-                      industry: record.industry || existingClient.industry,
-                      location: record.location || existingClient.location,
-                      status: record.status || existingClient.status,
-                    });
-                    updated++;
-                  } else {
-                    const now = new Date().toISOString();
-                    const newClient: Client = {
-                      id:
-                        record.id ||
-                        `client-${Date.now()}-${Math.random()
-                          .toString(36)
-                          .substr(2, 9)}`,
-                      name: record.name,
-                      description: record.description || "",
-                      industry: record.industry || "Unknown",
-                      location: record.location || "Unknown",
-                      status: record.status || "Active",
-                      createdAt: now,
-                      updatedAt: now,
-                    };
-                    clientDb.add(newClient);
-                    imported++;
-                  }
-                  break;
+                if (existingClient) {
+                  clientDb.update(existingClient.id, {
+                    description:
+                      record.description || existingClient.description,
+                    industry: record.industry || existingClient.industry,
+                    location: record.location || existingClient.location,
+                    status: record.status || existingClient.status,
+                  });
+                  updated++;
+                } else {
+                  const now = new Date().toISOString();
+                  const newClient: Client = {
+                    id:
+                      record.id ||
+                      `client-${Date.now()}-${Math.random()
+                        .toString(36)
+                        .substr(2, 9)}`,
+                    name: record.name,
+                    description: record.description || "",
+                    industry: record.industry || "Unknown",
+                    location: record.location || "Unknown",
+                    status: record.status || "Active",
+                    createdAt: now,
+                    updatedAt: now,
+                  };
+                  clientDb.add(newClient);
+                  imported++;
                 }
+              } catch (err) {
+                console.error("Error importing client:", err);
+                errors++;
+              }
+            }
+            break;
 
-                case "skills": {
-                  const existingSkill = existingSkills.find(
+          case "skills":
+            for (const record of batch) {
+              try {
+                const existingSkill = skillDb
+                  .getAll()
+                  .find(
                     (s) => s.name.toLowerCase() === record.name.toLowerCase()
                   );
 
-                  if (existingSkill) {
-                    skillDb.update(existingSkill.id, {
-                      purpose: record.purpose || existingSkill.purpose,
-                      knowledgeAreaId:
-                        record.knowledgeAreaId || existingSkill.knowledgeAreaId,
-                      skillCategoryId:
-                        record.skillCategoryId || existingSkill.skillCategoryId,
-                    });
-                    updated++;
-                  } else {
-                    const newSkill: Skill = {
-                      id:
-                        record.id ||
-                        `skill-${Date.now()}-${Math.random()
-                          .toString(36)
-                          .substr(2, 9)}`,
-                      name: record.name,
-                      purpose: record.purpose || "",
-                      knowledgeAreaId: record.knowledgeAreaId || "ka-1",
-                      skillCategoryId: record.skillCategoryId || "sc-1",
-                    };
-                    skillDb.add(newSkill);
-                    imported++;
-                  }
-                  break;
-                }
-
-                case "memberskills": {
-                  const memberSkill: MemberSkill = {
-                    memberId: record.memberId,
-                    skillId: record.skillId,
-                    scaleId: record.scaleId || "scale-expertise",
-                    proficiencyValue: record.proficiencyValue || "1",
+                if (existingSkill) {
+                  skillDb.update(existingSkill.id, {
+                    purpose: record.purpose || existingSkill.purpose,
+                    knowledgeAreaId:
+                      record.knowledgeAreaId || existingSkill.knowledgeAreaId,
+                    skillCategoryId:
+                      record.skillCategoryId || existingSkill.skillCategoryId,
+                  });
+                  updated++;
+                } else {
+                  const newSkill: Skill = {
+                    id:
+                      record.id ||
+                      `skill-${Date.now()}-${Math.random()
+                        .toString(36)
+                        .substr(2, 9)}`,
+                    name: record.name,
+                    purpose: record.purpose || "",
+                    knowledgeAreaId: record.knowledgeAreaId || "ka-1",
+                    skillCategoryId: record.skillCategoryId || "sc-1",
                   };
-                  memberSkillDb.add(memberSkill);
+                  skillDb.add(newSkill);
                   imported++;
-                  break;
                 }
-
-                default:
-                  throw new Error(`Unknown entity type: ${entity}`);
+              } catch (err) {
+                console.error("Error importing skill:", err);
+                errors++;
               }
-            } catch (err) {
-              console.error("Error importing record:", err);
-              errors++;
             }
-          }
+            break;
 
-          currentIndex = endIndex;
-
-          // Continue processing if there are more records
-          if (currentIndex < data.length) {
-            // Use requestIdleCallback if available, otherwise setTimeout
-            if (typeof requestIdleCallback !== "undefined") {
-              requestIdleCallback(processChunk);
-            } else {
-              setTimeout(() => processChunk(), 0);
+          case "memberskills":
+            for (const record of batch) {
+              try {
+                const memberSkill: MemberSkill = {
+                  memberId: record.memberId,
+                  skillId: record.skillId,
+                  scaleId: record.scaleId || "scale-expertise",
+                  proficiencyValue: record.proficiencyValue || "1",
+                };
+                memberSkillDb.add(memberSkill); // This will update existing or add new
+                imported++;
+              } catch (err) {
+                console.error("Error importing member skill:", err);
+                errors++;
+              }
             }
-          } else {
-            // All done!
-            resolve();
-          }
-        };
+            break;
 
-        // Start processing
-        if (typeof requestIdleCallback !== "undefined") {
-          requestIdleCallback(processChunk);
-        } else {
-          setTimeout(() => processChunk(), 0);
+          default:
+            throw new Error(`Unknown entity type: ${entity}`);
         }
-      });
+
+        // Allow UI to update between batches (except for the last batch)
+        if (batchIndex < totalBatches - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      }
 
       toast({
         title: "Import Complete",
@@ -226,6 +218,13 @@ export function ImportsPage() {
         }`,
         variant: errors > 0 ? "destructive" : "default",
       });
+
+      // Refresh the page after successful import to show updated data
+      if (errors === 0) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000); // Give user time to see the success message
+      }
     } catch (error) {
       console.error("Import error:", error);
       toast({
