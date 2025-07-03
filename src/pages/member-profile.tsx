@@ -30,23 +30,17 @@ import {
 import {
   memberDb,
   memberProfileDb,
-  skillDb,
-  scaleDb,
   initDatabase,
   loadExcelData,
 } from "@/lib/database";
 import { MemberProfileEditor } from "@/components/member-profile-editor";
 import { SkillsEditor } from "@/components/skills-editor";
-import type { Member, MemberProfile, Skill, Scale } from "@/types";
+import type { Member, MemberProfile } from "@/types";
 
 export function MemberProfilePage() {
   const { id } = useParams<{ id: string }>();
   const [member, setMember] = useState<Member | null>(null);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [skills, setSkills] = useState<Skill[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [scales, setScales] = useState<Scale[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,8 +57,6 @@ export function MemberProfilePage() {
 
       const memberData = memberDb.getById(id);
       let profileData = memberProfileDb.getByMemberId(id);
-      const allSkills = skillDb.getAll();
-      const allScales = scaleDb.getAll();
 
       console.log("=== Loading member profile for ID:", id, "===");
       console.log("Member data:", memberData);
@@ -105,8 +97,6 @@ export function MemberProfilePage() {
 
       setMember(memberData || null);
       setProfile(profileData || null);
-      setSkills(allSkills);
-      setScales(allScales);
     } catch (error) {
       console.error("Error loading member data:", error);
     } finally {
